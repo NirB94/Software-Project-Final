@@ -15,7 +15,7 @@ int first_input_validation(int length_of_input, char *input[])
         return 1;
     }
     if (strcmp(input[1], "wam") != 0 && strcmp(input[1], "ddg") != 0 && strcmp(input[1], "lnorm") != 0 &&
-    strcmp(input[1], "jacobi") != 0){
+    strcmp(input[1], "") != 0){
         printf("Invalid Input!");
         return 1;
     }
@@ -148,7 +148,7 @@ double** norm_graph_lap(double** wam, double** ddg, int n){
             lnorm[j][i] = lnorm[i][j];
         }
     }
-    for (i = 0; i < n; i++){
+    for (i = 0; i < n; i++){ // Consider deleting!
         ddg[i][i] = 1 / (ddg[i][i] * ddg[i][i]);
     }
     return lnorm;
@@ -180,7 +180,7 @@ double sum_off_diag_sq(double** mat, int n){
     return s;
 }
 
-double** update_e_vector_mat(double** V, double c, double s, int n, int i, int j){
+void update_e_vector_mat(double** V, double c, double s, int n, int i, int j){
     double* v1;
     double* v2;
     int k;
@@ -191,10 +191,10 @@ double** update_e_vector_mat(double** V, double c, double s, int n, int i, int j
             v1[k-1] = c * V[k][i] - s * V[k][j];
             v2[k-1] = s * V[k][i] + c * V[k][j];
         }
-        for (k = 1; k < n+1; k++){
-            V[k][i] = v1[k-1];
-            V[k][j] = v2[k-1];
-        }
+    for (k = 1; k < n+1; k++){
+        V[k][i] = v1[k-1];
+        V[k][j] = v2[k-1];
+    }
     
     free(v1);
     free(v2);
@@ -232,12 +232,10 @@ void update_e_value_mat(double** A, double c, double s, int n, int i, int j){
     A[j][j] = d2;
     A[i][j] = offd;
     A[j][i] = offd;
-    free(temp[0]);
-    free(temp[1]);
-    free(temp);
+    free_matrix(temp, 2);
 }
 
-double** jacobi(double** mat, int n){
+double** jacobi_eval_evec(double** mat, int n){
     double** A;
     double** V;
     int* midx;
@@ -278,18 +276,39 @@ double** jacobi(double** mat, int n){
     }
     
     free(midx);
-    for (i = 0; i < n; i++){
-        free(A[i]);
-    }
-    free(A);
+    free_matrix(A, n);
 
     return V;
+}
+
+void free_matrix(double** mat, int n) {
+    int i,j;
+    if (mat != NULL) {
+        for (i = 0; i < n; i++) {
+            free(mat[i]);
+        }
+        free(mat);
+    }
+}
+
+void print_mat(double** mat, int n, int m) {
+    int i, j;
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < m - 1; j++) {
+            printf("%.4f,", mat[i][j]);
+        }
+        printf("%.4f\n", mat[i][m-1]);
+    }
 }
 
 int main(int argc, char *argv[]){
     char* goal;
     char* input_file_path;
     double** obs;
+    double** wam;
+    double** ddg;
+    double** lnorm;
+    double** jacobi;
     int dims[2];
 
     if (first_input_validation(argc, argv) == 1){
@@ -297,6 +316,7 @@ int main(int argc, char *argv[]){
     }
 
     goal = argv[1];
+    
     input_file_path = argv[2];
     if (find_dimensions(input_file_path, dims) == 1){
         return 1;
@@ -306,4 +326,34 @@ int main(int argc, char *argv[]){
     if (obs == NULL){
         return 1;
     }
+
+    wam = weighted_adj_mat(obs, dims[0], dims[1]);
+
+    if (strcmp(goal, "wam") == 0) {
+        print_mat(wam, dims[0], dims[0]);
+    }
+
+    else {
+        ddg = diag_deg_mat(wam, dims[0]);
+        if (strcmp(goal, "ddg") == 0) {
+            print_mat(ddg, dims[0], dims[0]);
+        }
+
+        else {
+            lnorm = norm_graph_lap(wam, ddg, dims[0]);
+            if (strcmp(goal, "lnorm") == 0) {
+                print_mat(lnorm, dims[0], dims[0]);
+            }
+
+            else {
+                jacobi = jacobi_eval_evec(lnorm, dims[0]);
+                print_mat(jacobi, dims[0] + 1, dims[0]);
+            }   
+        }
+    }
+    free_matrix(wam, dims[0]);
+    free_matrix(ddg, dims[0]);
+    free_matrix(lnorm, dims[0]);
+    free_matrix(jacobi, dims[0] + 1);
+    return 0;
 }
