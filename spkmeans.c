@@ -12,8 +12,8 @@ void free_matrix(double** mat, int n) {
         for (i = 0; i < n; i++) {
             free(mat[i]);
         }
-        free(mat);
     }
+    free(mat);
 }
 
 /*
@@ -86,9 +86,17 @@ double** read_file(char const *filename, int rows, int columns)
         return NULL;
     }
     obs = calloc(rows, sizeof(double*));
+    if (obs == NULL) {
+        free_matrix(obs, rows);
+        return NULL;
+    }
     for (i = 0; i < rows; i++)
     {
         obs[i] = calloc(columns, sizeof(double));
+        if (obs[i] == NULL) {
+            free_matrix(obs[i], columns);
+            return NULL;
+        }
         for (j = 0; j < columns; j++)
         {
             fscanf(f, "%lf%c", &obs[i][j], &c);
@@ -119,7 +127,7 @@ double** weighted_adj_mat(double** obs, int n, int d){
 
     wam = calloc(n, sizeof(double*));
     if (wam == NULL) {
-        free(wam);
+        free_matrix(wam, n);
         return NULL;
     }
     
@@ -146,8 +154,16 @@ double** diag_deg_mat(double** wam, int n){
     int i, j;
 
     ddg = calloc(n, sizeof(double*));
+    if (ddg == NULL) {
+        free_matrix(ddg, n);
+        return NULL;
+    }
     for (i = 0; i < n; i++){
         ddg[i] = calloc(n, sizeof(double));
+        if (ddg[i] == NULL) {
+            free_matrix(ddg, n);
+            return NULL;
+        }
         for (j = 0; j < n; j++){
             ddg[i][i] += wam[i][j];
         }
@@ -164,8 +180,16 @@ double** norm_graph_lap(double** wam, double** ddg, int n){
     }
     
     lnorm = calloc(n, sizeof(double*));
+    if (lnorm == NULL) {
+        free_matrix(lnorm, n);
+        return NULL;
+    }
     for (i = 0; i < n; i++){
         lnorm[i] = calloc(n, sizeof(double));
+        if (lnorm[i] == NULL) {
+            free_matrix(lnorm[i], n);
+            return NULL;
+        }
         lnorm[i][i] = 1;
         for (j = i + 1; j < n; j++){
             lnorm[i][j] = - wam[i][j] * ddg[i][i] * ddg[j][j];
@@ -182,6 +206,10 @@ int* max_abs_off_diag(double** mat, int n){
     int i, j;
     int *max_indices;
     max_indices = calloc(2, sizeof(int));
+    if (max_indices == NULL) {
+        free(max_indices);
+        return NULL;
+    }
     max_indices[0] = 0;
     max_indices[1] = 1;
     for (i = 0; i < n; i++){
@@ -212,7 +240,15 @@ void update_e_vector_mat(double** V, double c, double s, int n, int i, int j){
     double* v2;
     int k;
     v1 = calloc(n, sizeof(double));
+    if (v1 == NULL) {
+        free(v1);
+        return NULL;
+    }
     v2 = calloc(n, sizeof(double));
+    if (v2 == NULL) {
+        free(v2);
+        return NULL;
+    }
     
     for (k = 1; k < n+1; k++){
             v1[k-1] = c * V[k][i] - s * V[k][j];
@@ -233,8 +269,19 @@ void update_e_value_mat(double** A, double c, double s, int n, int i, int j){
     double d1, d2, offd;
 
     temp = calloc(2, sizeof(double*));
+    if (temp == NULL) {
+        free(temp);
+    }
+    
     temp[0] = calloc(n, sizeof(double));
+    if (temp[0] == NULL) {
+        free(temp[0]);
+    }
     temp[1] = calloc(n, sizeof(double));
+    if (temp[1] == NULL) {
+        free(temp[1]);
+        return NULL;
+    }
     
     d1 = c * c * A[i][i] + s * s * A[j][j] - 2 * c * s * A[i][j];
     d2 = s * s * A[i][i] + c * c * A[j][j] + 2 * c * s * A[i][j];
@@ -272,16 +319,39 @@ double** jacobi_eval_evec(double** mat, int n){
     eps = 0.00001;
     iter = 100;
     A = calloc(n, sizeof(double*));
+    if (A == NULL) {
+        free_matrix(A, n);
+        return NULL;
+    }
+    
     V = calloc(n+1, sizeof(double*));
+    if (V == NULL) {
+        free_matrix(V, n+1);
+        return NULL;
+    }
+    
     for (i = 0; i < n; i++){
         A[i] = calloc(n, sizeof(double));
+        if (A[i] == NULL) {
+            free_matrix(A[i], n);
+        }
+        
         for (j = 0; j < n; j++){
             A[i][j] = mat[i][j];
         }
         V[i+1] = calloc(n, sizeof(double));
+        if (V[i+1] == NULL) {
+            free_matrix(V[i+1], n);
+        }
+        
         V[i+1][i] = 1;
     }
     V[0] = calloc(n, sizeof(double));
+    if (V[0] == NULL) {
+        free_matrix(V[0], n);
+        return NULL;
+    }
+    
     
     sso2 = sum_off_diag_sq(A, n);
     do
