@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <math.h>
+#include <string.h>
 
 /*
 The function check if the input is of the right length.
@@ -148,7 +149,7 @@ double** norm_graph_lap(double** wam, double** ddg, int n){
             lnorm[j][i] = lnorm[i][j];
         }
     }
-    for (i = 0; i < n; i++){ // Consider deleting!
+    for (i = 0; i < n; i++){ /* Consider deleting! */
         ddg[i][i] = 1 / (ddg[i][i] * ddg[i][i]);
     }
     return lnorm;
@@ -156,10 +157,13 @@ double** norm_graph_lap(double** wam, double** ddg, int n){
 
 int* max_abs_off_diag(double** mat, int n){
     int i, j;
-    int max_indices[2] = {0, 1};
+    int *max_indices;
+    max_indices = calloc(2, sizeof(int));
+    max_indices[0] = 0;
+    max_indices[1] = 1;
     for (i = 0; i < n; i++){
         for (j = i + 1; j < n; j++){
-            if (abs(mat[max_indices[0]][max_indices[1]] < abs(mat[i][j]))){
+            if (fabs(mat[max_indices[0]][max_indices[1]]) < fabs(mat[i][j])){
                 max_indices[0] = i;
                 max_indices[1] = j;
             }
@@ -198,6 +202,16 @@ void update_e_vector_mat(double** V, double c, double s, int n, int i, int j){
     
     free(v1);
     free(v2);
+}
+
+void free_matrix(double** mat, int n) {
+    int i;
+    if (mat != NULL) {
+        for (i = 0; i < n; i++) {
+            free(mat[i]);
+        }
+        free(mat);
+    }
 }
 
 void update_e_value_mat(double** A, double c, double s, int n, int i, int j){
@@ -262,7 +276,7 @@ double** jacobi_eval_evec(double** mat, int n){
         sso1 = sso2;
         midx = max_abs_off_diag(A, n);
         theta = (A[midx[1]][midx[1]] - A[midx[0]][midx[0]]) / (2 * A[midx[0]][midx[1]]);
-        t = sign(theta) / (abs(theta) + sqrt(theta * theta + 1));
+        t = sign(theta) / (fabs(theta) + sqrt(theta * theta + 1));
         c = 1 / sqrt(t * t + 1);
         s = t * c;
         update_e_value_mat(A, c, s, n, midx[0], midx[1]);
@@ -279,16 +293,6 @@ double** jacobi_eval_evec(double** mat, int n){
     free_matrix(A, n);
 
     return V;
-}
-
-void free_matrix(double** mat, int n) {
-    int i,j;
-    if (mat != NULL) {
-        for (i = 0; i < n; i++) {
-            free(mat[i]);
-        }
-        free(mat);
-    }
 }
 
 void print_mat(double** mat, int n, int m) {
