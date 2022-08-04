@@ -5,6 +5,17 @@
 #include <math.h>
 #include <string.h>
 
+
+void free_matrix(double** mat, int n) {
+    int i;
+    if (mat != NULL) {
+        for (i = 0; i < n; i++) {
+            free(mat[i]);
+        }
+        free(mat);
+    }
+}
+
 /*
 The function check if the input is of the right length.
 Then, the function checks whether goal is valid.
@@ -107,12 +118,24 @@ double** weighted_adj_mat(double** obs, int n, int d){
     int i, j;
 
     wam = calloc(n, sizeof(double*));
+    if (wam == NULL) {
+        free(wam);
+        return NULL;
+    }
+    
     for (i = 0; i < n; i++){
         wam[i] = calloc(n, sizeof(double));
+        if (wam[i] == NULL) { 
+            free_matrix(wam, i);
+            return NULL;
+            }
         wam[i][i] = 0;
+    }
+    for (i = 0; i < n; i++) {    
         for (j = i + 1; j < n; j++){
-            wam[i][j] = exp(- euclid_dist(obs[i], obs[j], d) / 2);
+            wam[i][j] = exp(- euclid_dist(obs[i], obs[j], d) / 2.0);
             wam[j][i] = wam[i][j];
+            printf("%f", wam[i][j]);  /* DONT FORGET TO DELETE */
         }
     }
     return wam;
@@ -202,16 +225,6 @@ void update_e_vector_mat(double** V, double c, double s, int n, int i, int j){
     
     free(v1);
     free(v2);
-}
-
-void free_matrix(double** mat, int n) {
-    int i;
-    if (mat != NULL) {
-        for (i = 0; i < n; i++) {
-            free(mat[i]);
-        }
-        free(mat);
-    }
 }
 
 void update_e_value_mat(double** A, double c, double s, int n, int i, int j){
@@ -320,8 +333,9 @@ int main(int argc, char *argv[]){
     }
 
     goal = argv[1];
-    
+
     input_file_path = argv[2];
+
     if (find_dimensions(input_file_path, dims) == 1){
         return 1;
     }
@@ -331,7 +345,11 @@ int main(int argc, char *argv[]){
         return 1;
     }
 
+    printf("check before wam \n");
+
     wam = weighted_adj_mat(obs, dims[0], dims[1]);
+
+    printf("check afgter wam \n");
 
     if (strcmp(goal, "wam") == 0) {
         print_mat(wam, dims[0], dims[0]);
@@ -359,5 +377,6 @@ int main(int argc, char *argv[]){
     free_matrix(ddg, dims[0]);
     free_matrix(lnorm, dims[0]);
     free_matrix(jacobi, dims[0] + 1);
+    printf("Just in case");
     return 0;
 }
