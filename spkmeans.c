@@ -8,6 +8,7 @@
 
 void free_matrix(double** mat, int n) {
     int i;
+    
     if (mat != NULL) {
         for (i = 0; i < n; i++) {
             free(mat[i]);
@@ -27,7 +28,7 @@ int first_input_validation(int length_of_input, char *input[])
         return 1;
     }
     if (strcmp(input[1], "wam") != 0 && strcmp(input[1], "ddg") != 0 && strcmp(input[1], "lnorm") != 0 &&
-    strcmp(input[1], "") != 0){
+    strcmp(input[1], "jacobi") != 0){
         printf("Invalid Input!");
         return 1;
     }
@@ -208,6 +209,7 @@ double** norm_graph_lap(double** wam, double** ddg, int n){
 int* max_abs_off_diag(double** mat, int n){
     int i, j;
     int *max_indices;
+    
     max_indices = calloc(2, sizeof(int));
     if (max_indices == NULL) {
         printf("An Error Has Occurred");
@@ -239,9 +241,9 @@ double sum_off_diag_sq(double** mat, int n){
 }
 
 int update_e_vector_mat(double** V, double c, double s, int n, int i, int j){
-    double* v1;
-    double* v2;
+    double* v1, *v2;
     int k;
+    
     v1 = calloc(n, sizeof(double));
     if (v1 == NULL) {
         printf("An Error Has Occurred");
@@ -312,8 +314,7 @@ int update_e_value_mat(double** A, double c, double s, int n, int i, int j){
 }
 
 double** jacobi_eval_evec(double** mat, int n){
-    double** A;
-    double** V;
+    double** A, **V;
     int* midx;
     int i, j, iter, flag;
     double sso1, sso2, eps, s, c, theta, t;
@@ -349,7 +350,7 @@ double** jacobi_eval_evec(double** mat, int n){
             return NULL;
         }
         if (i > 0){    
-            V[i+1][i] = 1;
+            V[i][i-1] = 1;
         }
     }
     
@@ -392,6 +393,7 @@ double** jacobi_eval_evec(double** mat, int n){
 
 void print_mat(double** mat, int n, int m) {
     int i, j;
+    
     for (i = 0; i < n; i++) {
         for (j = 0; j < m - 1; j++) {
             printf("%.4f,", mat[i][j]);
@@ -403,19 +405,14 @@ void print_mat(double** mat, int n, int m) {
 int main(int argc, char *argv[]){
     char* goal;
     char* input_file_path;
-    double** obs;
-    double** wam;
-    double** ddg;
-    double** lnorm;
-    double** jacobi;
+    double** obs, **wam, **ddg, **lnorm, **jacobi;
     int dims[2];
 
     if (first_input_validation(argc, argv) == 1){
         return 1;
     }
-
+    
     goal = argv[1];
-
     input_file_path = argv[2];
 
     if (find_dimensions(input_file_path, dims) == 1){
@@ -432,36 +429,45 @@ int main(int argc, char *argv[]){
     }
     if (strcmp(goal, "wam") == 0) {
         print_mat(wam, dims[0], dims[0]);
+        free_matrix(wam, dims[0]);
     }
-
     else {
         ddg = diag_deg_mat(wam, dims[0]);
-        if (ddg == NULL){
-            return 1;
-        }
-        if (strcmp(goal, "ddg") == 0) {
-            print_mat(ddg, dims[0], dims[0]);
+        if ((ddg == NULL) | (strcmp(goal, "ddg") == 0)){
+            free_matrix(wam, dims[0]);
+            if (ddg == NULL){
+                return 1;
+            }
+            else {
+                print_mat(ddg, dims[0], dims[0]);
+                free_matrix(ddg, dims[0]);
+            }
         }
         else {
             lnorm = norm_graph_lap(wam, ddg, dims[0]);
-            if (lnorm == NULL){
-                return 1;
-            }
-            if (strcmp(goal, "lnorm") == 0) {
-                print_mat(lnorm, dims[0], dims[0]);
+            free_matrix(wam, dims[0]);
+            free_matrix(ddg, dims[0]);
+            if ((lnorm == NULL) | (strcmp(goal, "lnorm") == 0)){
+                if (lnorm == NULL){
+                    return 1;
+                }
+                else {
+                    print_mat(lnorm, dims[0], dims[0]);
+                    free_matrix(lnorm, dims[0]);
+                }
             }
             else {
                 jacobi = jacobi_eval_evec(lnorm, dims[0]);
+                free_matrix(lnorm, dims[0]);
                 if (jacobi == NULL){
                     return 1;
                 }
-                print_mat(jacobi, dims[0] + 1, dims[0]);
+                else {
+                    print_mat(jacobi, dims[0]+1, dims[0]);
+                    free_matrix(jacobi, dims[0]+1);
+                }
             }   
         }
     }
-    free_matrix(wam, dims[0]);
-    free_matrix(ddg, dims[0]);
-    free_matrix(lnorm, dims[0]);
-    free_matrix(jacobi, dims[0] + 1);
     return 0;
 }
