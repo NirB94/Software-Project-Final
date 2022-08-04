@@ -426,31 +426,35 @@ int main(int argc, char *argv[]){
     if (obs == NULL){
         return 1;
     }
-
-    printf("check before wam \n");
-
     wam = weighted_adj_mat(obs, dims[0], dims[1]);
-
-    printf("check afgter wam \n");
-
+    if (wam == NULL){
+        return 1;
+    }
     if (strcmp(goal, "wam") == 0) {
         print_mat(wam, dims[0], dims[0]);
     }
 
     else {
         ddg = diag_deg_mat(wam, dims[0]);
+        if (ddg == NULL){
+            return 1;
+        }
         if (strcmp(goal, "ddg") == 0) {
             print_mat(ddg, dims[0], dims[0]);
         }
-
         else {
             lnorm = norm_graph_lap(wam, ddg, dims[0]);
+            if (lnorm == NULL){
+                return 1;
+            }
             if (strcmp(goal, "lnorm") == 0) {
                 print_mat(lnorm, dims[0], dims[0]);
             }
-
             else {
                 jacobi = jacobi_eval_evec(lnorm, dims[0]);
+                if (jacobi == NULL){
+                    return 1;
+                }
                 print_mat(jacobi, dims[0] + 1, dims[0]);
             }   
         }
@@ -459,6 +463,5 @@ int main(int argc, char *argv[]){
     free_matrix(ddg, dims[0]);
     free_matrix(lnorm, dims[0]);
     free_matrix(jacobi, dims[0] + 1);
-    printf("Just in case");
     return 0;
 }
