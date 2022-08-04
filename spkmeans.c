@@ -12,8 +12,8 @@ void free_matrix(double** mat, int n) {
         for (i = 0; i < n; i++) {
             free(mat[i]);
         }
+        free(mat);
     }
-    free(mat);
 }
 
 /*
@@ -72,8 +72,7 @@ int find_dimensions(char const *filename, int *dims){
 The function reads the input file.
 The function returns a double matrix of size rows * columns whose elements are that of the input file.
 */
-double** read_file(char const *filename, int rows, int columns) 
-{
+double** read_file(char const *filename, int rows, int columns) {
     FILE *f = NULL;
     char c;
     int i, j;
@@ -87,14 +86,15 @@ double** read_file(char const *filename, int rows, int columns)
     }
     obs = calloc(rows, sizeof(double*));
     if (obs == NULL) {
-        free_matrix(obs, rows);
+        printf("An Error Has Occurred");
         return NULL;
     }
     for (i = 0; i < rows; i++)
     {
         obs[i] = calloc(columns, sizeof(double));
         if (obs[i] == NULL) {
-            free_matrix(obs[i], columns);
+            free_matrix(obs, i);
+            printf("An Error Has Occurred");
             return NULL;
         }
         for (j = 0; j < columns; j++)
@@ -127,23 +127,22 @@ double** weighted_adj_mat(double** obs, int n, int d){
 
     wam = calloc(n, sizeof(double*));
     if (wam == NULL) {
-        free_matrix(wam, n);
+        printf("An Error Has Occurred");
         return NULL;
     }
-    
     for (i = 0; i < n; i++){
         wam[i] = calloc(n, sizeof(double));
         if (wam[i] == NULL) { 
             free_matrix(wam, i);
+            printf("An Error Has Occurred");
             return NULL;
-            }
+        }
         wam[i][i] = 0;
     }
     for (i = 0; i < n; i++) {    
         for (j = i + 1; j < n; j++){
             wam[i][j] = exp(- euclid_dist(obs[i], obs[j], d) / 2.0);
             wam[j][i] = wam[i][j];
-            printf("%f", wam[i][j]);  /* DONT FORGET TO DELETE */
         }
     }
     return wam;
@@ -155,13 +154,14 @@ double** diag_deg_mat(double** wam, int n){
 
     ddg = calloc(n, sizeof(double*));
     if (ddg == NULL) {
-        free_matrix(ddg, n);
+        printf("An Error Has Occurred");
         return NULL;
     }
     for (i = 0; i < n; i++){
         ddg[i] = calloc(n, sizeof(double));
         if (ddg[i] == NULL) {
-            free_matrix(ddg, n);
+            free_matrix(ddg, i);
+            printf("An Error Has Occurred");
             return NULL;
         }
         for (j = 0; j < n; j++){
@@ -181,16 +181,19 @@ double** norm_graph_lap(double** wam, double** ddg, int n){
     
     lnorm = calloc(n, sizeof(double*));
     if (lnorm == NULL) {
-        free_matrix(lnorm, n);
+        printf("An Error Has Occurred");
         return NULL;
     }
     for (i = 0; i < n; i++){
         lnorm[i] = calloc(n, sizeof(double));
-        if (lnorm[i] == NULL) {
-            free_matrix(lnorm[i], n);
+        if (lnorm[i] == NULL) { 
+            free_matrix(lnorm, i);
+            printf("An Error Has Occurred");
             return NULL;
         }
         lnorm[i][i] = 1;
+    }
+    for (i = 0; i < n; i++){
         for (j = i + 1; j < n; j++){
             lnorm[i][j] = - wam[i][j] * ddg[i][i] * ddg[j][j];
             lnorm[j][i] = lnorm[i][j];
@@ -207,7 +210,7 @@ int* max_abs_off_diag(double** mat, int n){
     int *max_indices;
     max_indices = calloc(2, sizeof(int));
     if (max_indices == NULL) {
-        free(max_indices);
+        printf("An Error Has Occurred");
         return NULL;
     }
     max_indices[0] = 0;
@@ -235,21 +238,20 @@ double sum_off_diag_sq(double** mat, int n){
     return s;
 }
 
-void update_e_vector_mat(double** V, double c, double s, int n, int i, int j){
+int update_e_vector_mat(double** V, double c, double s, int n, int i, int j){
     double* v1;
     double* v2;
     int k;
     v1 = calloc(n, sizeof(double));
     if (v1 == NULL) {
-        free(v1);
-        return NULL;
+        printf("An Error Has Occurred");
+        return 1;
     }
     v2 = calloc(n, sizeof(double));
     if (v2 == NULL) {
-        free(v2);
-        return NULL;
-    }
-    
+        printf("An Error Has Occurred");
+        return 1;
+    }    
     for (k = 1; k < n+1; k++){
             v1[k-1] = c * V[k][i] - s * V[k][j];
             v2[k-1] = s * V[k][i] + c * V[k][j];
@@ -258,29 +260,28 @@ void update_e_vector_mat(double** V, double c, double s, int n, int i, int j){
         V[k][i] = v1[k-1];
         V[k][j] = v2[k-1];
     }
-    
     free(v1);
     free(v2);
+    return 0;
 }
 
-void update_e_value_mat(double** A, double c, double s, int n, int i, int j){
+int update_e_value_mat(double** A, double c, double s, int n, int i, int j){
     double** temp;
     int r;
     double d1, d2, offd;
 
     temp = calloc(2, sizeof(double*));
     if (temp == NULL) {
-        free(temp);
+        printf("An Error Has Occurred");
+        return 1;
     }
-    
-    temp[0] = calloc(n, sizeof(double));
-    if (temp[0] == NULL) {
-        free(temp[0]);
-    }
-    temp[1] = calloc(n, sizeof(double));
-    if (temp[1] == NULL) {
-        free(temp[1]);
-        return NULL;
+    for (r = 0; r < 2; r++){
+        temp[r] = calloc(n, sizeof(double));
+        if (temp[r] == NULL){
+            free_matrix(temp, r);
+            printf("An Error Has Occurred");
+            return 1;
+        }
     }
     
     d1 = c * c * A[i][i] + s * s * A[j][j] - 2 * c * s * A[i][j];
@@ -307,52 +308,52 @@ void update_e_value_mat(double** A, double c, double s, int n, int i, int j){
     A[i][j] = offd;
     A[j][i] = offd;
     free_matrix(temp, 2);
+    return 0;
 }
 
 double** jacobi_eval_evec(double** mat, int n){
     double** A;
     double** V;
     int* midx;
-    int i, j, iter;
+    int i, j, iter, flag;
     double sso1, sso2, eps, s, c, theta, t;
     
     eps = 0.00001;
     iter = 100;
     A = calloc(n, sizeof(double*));
-    if (A == NULL) {
-        free_matrix(A, n);
+    if (A == NULL) {            
+        printf("An Error Has Occurred");
         return NULL;
-    }
-    
+    }    
     V = calloc(n+1, sizeof(double*));
     if (V == NULL) {
-        free_matrix(V, n+1);
+        printf("An Error Has Occurred");
         return NULL;
     }
-    
-    for (i = 0; i < n; i++){
-        A[i] = calloc(n, sizeof(double));
-        if (A[i] == NULL) {
-            free_matrix(A[i], n);
+    for (i = 0; i < n+1; i++){
+        if (i < n){
+            A[i] = calloc(n, sizeof(double));
+            if (A[i] == NULL) {
+                free_matrix(A, i);
+                printf("An Error Has Occurred");
+                return NULL;
+            }
+            for (j = 0; j < n; j++){
+                A[i][j] = mat[i][j];
+            }
         }
-        
-        for (j = 0; j < n; j++){
-            A[i][j] = mat[i][j];
+        V[i] = calloc(n, sizeof(double));
+        if (V[i] == NULL) {
+            free_matrix(V, i);
+            printf("An Error Has Occurred");
+            return NULL;
         }
-        V[i+1] = calloc(n, sizeof(double));
-        if (V[i+1] == NULL) {
-            free_matrix(V[i+1], n);
+        if (i > 0){    
+            V[i+1][i] = 1;
         }
-        
-        V[i+1][i] = 1;
     }
-    V[0] = calloc(n, sizeof(double));
-    if (V[0] == NULL) {
-        free_matrix(V[0], n);
-        return NULL;
-    }
     
-    
+    flag = 0;
     sso2 = sum_off_diag_sq(A, n);
     do
     {
@@ -362,19 +363,30 @@ double** jacobi_eval_evec(double** mat, int n){
         t = sign(theta) / (fabs(theta) + sqrt(theta * theta + 1));
         c = 1 / sqrt(t * t + 1);
         s = t * c;
-        update_e_value_mat(A, c, s, n, midx[0], midx[1]);
+        if (update_e_value_mat(A, c, s, n, midx[0], midx[1]) == 1){
+            flag = 1;
+            break;
+        }
         sso2 = sum_off_diag_sq(A, n);
         iter--;
-        update_e_vector_mat(V, c, s, n, midx[0], midx[1]);
+        if (update_e_vector_mat(V, c, s, n, midx[0], midx[1]) == 1){
+            flag = 1;
+            break;
+        }
     } while (sso1 - sso2 > eps || iter > 0);
     
-    for (i = 0; i < n; i++){
-        V[0][i] = A[i][i];
+    if (flag == 0){
+        for (i = 0; i < n; i++){
+            V[0][i] = A[i][i];
+        }
     }
-    
     free(midx);
     free_matrix(A, n);
 
+    if (flag == 1){
+        free_matrix(V, n);
+        return NULL;
+    }
     return V;
 }
 
