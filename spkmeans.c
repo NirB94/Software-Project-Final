@@ -423,6 +423,16 @@ int main(int argc, char *argv[]){
     if (obs == NULL){
         return 1;
     }
+    if (strcmp(goal, "jacobi") == 0){
+        jacobi = jacobi_eval_evec(obs, dims[0], dims[1]);
+        if (jacobi == NULL){
+            return 1;
+        }
+        print_mat(jacobi, dims[0], dims[1]);
+        free_matrix(jacobi, dims[0], dims[1]);
+        return 0;
+    }
+    
     wam = weighted_adj_mat(obs, dims[0], dims[1]);
     if (wam == NULL){
         return 1;
@@ -447,26 +457,13 @@ int main(int argc, char *argv[]){
             lnorm = norm_graph_lap(wam, ddg, dims[0]);
             free_matrix(wam, dims[0]);
             free_matrix(ddg, dims[0]);
-            if ((lnorm == NULL) | (strcmp(goal, "lnorm") == 0)){
-                if (lnorm == NULL){
-                    return 1;
-                }
-                else {
-                    print_mat(lnorm, dims[0], dims[0]);
-                    free_matrix(lnorm, dims[0]);
-                }
+            if (lnorm == NULL){
+                return 1;
             }
             else {
-                jacobi = jacobi_eval_evec(lnorm, dims[0]);
+                print_mat(lnorm, dims[0], dims[0]);
                 free_matrix(lnorm, dims[0]);
-                if (jacobi == NULL){
-                    return 1;
-                }
-                else {
-                    print_mat(jacobi, dims[0]+1, dims[0]);
-                    free_matrix(jacobi, dims[0]+1);
-                }
-            }   
+            }
         }
     }
     return 0;
