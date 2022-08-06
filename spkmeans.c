@@ -71,9 +71,9 @@ int find_dimensions(char const *filename, int *dims){
 
 /*
 The function reads the input file.
-The function returns a double matrix of size rows * columns whose elements are that of the input file.
+The function returns a double matrix of size n * d whose elements are that of the input file.
 */
-double** read_file(char const *filename, int rows, int columns) {
+double** read_file(char const *filename, int n, int d) {
     FILE *f = NULL;
     char c;
     int i, j;
@@ -85,20 +85,20 @@ double** read_file(char const *filename, int rows, int columns) {
         printf("An Error Has Occurred");
         return NULL;
     }
-    obs = calloc(rows, sizeof(double*));
+    obs = calloc(n, sizeof(double*));
     if (obs == NULL) {
         printf("An Error Has Occurred");
         return NULL;
     }
-    for (i = 0; i < rows; i++)
+    for (i = 0; i < n; i++)
     {
-        obs[i] = calloc(columns, sizeof(double));
+        obs[i] = calloc(d, sizeof(double));
         if (obs[i] == NULL) {
             free_matrix(obs, i);
             printf("An Error Has Occurred");
             return NULL;
         }
-        for (j = 0; j < columns; j++)
+        for (j = 0; j < d; j++)
         {
             fscanf(f, "%lf%c", &obs[i][j], &c);
         }
@@ -109,14 +109,14 @@ double** read_file(char const *filename, int rows, int columns) {
 
 /*
 The function returns the euclidean distance between the two double vectors.
-The function assumes the dimension of the vectors is columns.
+The function assumes the dimension of the vectors is d.
 */
-double euclid_dist(double* x, double* y, int columns){
+double euclid_dist(double* x, double* y, int d){
     double dist;
     int j;
 
     dist = 0;
-    for (j = 0; j < columns; j++){
+    for (j = 0; j < d; j++){
         dist += (x[j]-y[j]) * (x[j]-y[j]);
     }
     return sqrt(dist);
@@ -391,22 +391,67 @@ double** jacobi_eval_evec(double** mat, int n){
     return V;
 }
 
-void print_mat(double** mat, int n, int m) {
+void print_mat(double** mat, int n, int d) {
     int i, j;
     
     for (i = 0; i < n; i++) {
-        for (j = 0; j < m - 1; j++) {
+        for (j = 0; j < d - 1; j++) {
             printf("%.4f,", mat[i][j]);
         }
-        printf("%.4f\n", mat[i][m-1]);
+        printf("%.4f\n", mat[i][d-1]);
     }
 }
+
+double** calculate_mat(double** mat, char* goal ,int n, int d){
+    double** wam, **ddg, **lnorm, **jacobi;
+
+    if (strcmp(goal, "jacobi") == 0){
+        jacobi = jacobi_eval_evec(mat, n, d);
+        if (jacobi == NULL){
+            return NULL;
+        }
+        return jacobi;
+    }
+    
+    wam = weighted_adj_mat(mat, n, d);
+    if (wam == NULL){
+        return NULL;
+    }
+    if (strcmp(goal, "wam") == 0) {
+        return wam;
+    }
+    else {
+        ddg = diag_deg_mat(wam, n);
+        if ((ddg == NULL) || (strcmp(goal, "ddg") == 0)){
+            free_matrix(wam, n);
+            if (ddg == NULL){
+                return NULL;
+            }
+            else {
+                return ddg;
+            }
+        }
+        else {
+            lnorm = norm_graph_lap(wam, ddg, n);
+            free_matrix(wam, n);
+            free_matrix(ddg, n);
+            if (lnorm == NULL){
+                return NULL;
+            }
+            else {
+                return lnorm;
+            }
+        }
+    }
+}
+
 
 int main(int argc, char *argv[]){
     char* goal;
     char* input_file_path;
-    double** obs, **wam, **ddg, **lnorm, **jacobi;
+    double** obs, **result;
     int dims[2];
+    int jacobi_flag;
 
     if (first_input_validation(argc, argv) == 1){
         return 1;
@@ -423,48 +468,13 @@ int main(int argc, char *argv[]){
     if (obs == NULL){
         return 1;
     }
-    if (strcmp(goal, "jacobi") == 0){
-        jacobi = jacobi_eval_evec(obs, dims[0], dims[1]);
-        if (jacobi == NULL){
-            return 1;
-        }
-        print_mat(jacobi, dims[0], dims[1]);
-        free_matrix(jacobi, dims[0], dims[1]);
-        return 0;
-    }
-    
-    wam = weighted_adj_mat(obs, dims[0], dims[1]);
-    if (wam == NULL){
+
+    result = calculate_mat(obs, goal, dims[0], dims[1]);
+    if (result == NULL){
         return 1;
     }
-    if (strcmp(goal, "wam") == 0) {
-        print_mat(wam, dims[0], dims[0]);
-        free_matrix(wam, dims[0]);
-    }
-    else {
-        ddg = diag_deg_mat(wam, dims[0]);
-        if ((ddg == NULL) | (strcmp(goal, "ddg") == 0)){
-            free_matrix(wam, dims[0]);
-            if (ddg == NULL){
-                return 1;
-            }
-            else {
-                print_mat(ddg, dims[0], dims[0]);
-                free_matrix(ddg, dims[0]);
-            }
-        }
-        else {
-            lnorm = norm_graph_lap(wam, ddg, dims[0]);
-            free_matrix(wam, dims[0]);
-            free_matrix(ddg, dims[0]);
-            if (lnorm == NULL){
-                return 1;
-            }
-            else {
-                print_mat(lnorm, dims[0], dims[0]);
-                free_matrix(lnorm, dims[0]);
-            }
-        }
-    }
+    jacobi_flag = strcmp(goal, "jacobi") == 0;
+    print_mat(result, dims[0] + jacobi_flag, dims[1]);
+    free_matrix(result, dims[0] + jacobi_flag);
     return 0;
 }
