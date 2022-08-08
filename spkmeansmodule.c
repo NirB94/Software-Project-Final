@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <spkmeans.h>
 #include <string.h>
+#include <math.h>
 
 /*
 The function finds the index of the closest centroid to the array x.
@@ -11,7 +12,7 @@ The distance is measured using the euclidean distance.
 The function assumes the dimension of the centroids and of x is d.
 The function uses the function euclid_dist_sq.
 */
-static int find_closest(double** centroids, double* x, int k, int ddim){
+static int find_closest(double** centroids, double* x, int k, int d){
     double minimal_distance, curr_distance;
     int minimal_index, i;
     
@@ -138,9 +139,9 @@ static PyObject* write_to_python(double** mat, int n, int d){
     PyObject* outer_list;
     PyObject* inner_list;
     PyObject* element;
-    outer_list = PyList_New(N);
+    outer_list = PyList_New(n);
     for (i = 0; i < n; i++){
-        inner_list = PyList_New(dim);
+        inner_list = PyList_New(d);
         for (j = 0; j < d; j++){
             element = PyFloat_FromDouble(mat[i][j]);
             PyList_SET_ITEM(inner_list, j, element);
@@ -152,9 +153,9 @@ static PyObject* write_to_python(double** mat, int n, int d){
 
 static PyObject* apply_mat_ops(PyObject *args){
     double** mat, **result;
-    PyObject* python_mat;
+    PyObject* python_mat, python_result;
     char* goal;
-    int n, d;
+    int n, d, jacobi_flag;
 
     if (!PyArg_ParseTuple(args, "siiO", &goal, &n, &d, &python_mat)){ return NULL; }
     
@@ -165,10 +166,78 @@ static PyObject* apply_mat_ops(PyObject *args){
     free_matrix(mat, n);
     
     if (result == NULL){ return NULL; }
-    return write_to_python(mat, n + (strcmp(goal, "jacobi") == 0), d);
+    jacobi_flag = (strcmp(goal, "jacobi") == 0);
+    python_result = write_to_python(result, n + jacobi_flag, n)
+    free_matrix(result, n + jacobi_flag);
+    return python_result;
 }
 
-static PyObject* apply_kmeans_prep(PyObject *args){}
+static double** transpose(double** mat, int n, int d){
+    double** result;
+    int i, j;
+
+    result = calloc(n, sizeof(*double));
+    if (result == NULL){ return NULL; }
+    for (i = 0; i < n; i++){
+        result[i] = calloc(d, sizeof(double));
+        if (result[i] == NULL){
+            free_matrix(result, i);
+            return NULL;
+        }
+        for (j = 0; j < d; j++){
+            result[i][j] = mat[j][i];
+        }
+    }
+    return result;
+}
+
+static int comparator(const void *x, const void *y)
+{
+    const double * dx = (const double *) x
+    const double * dy = (const double *) y;
+    return dx[0] >= dy[0] ? -1 : dx[0] < dy[0];
+}
+
+static void sort_by_eval(double** jacobi_t, int n){
+    qsort(jacobi_t, n, sizeof(*double), comparator);
+}
+
+static int eigen_gap(double** jacobi_t, n){
+    int i, imax;
+    double delta;
+
+    delta = 0.0;
+    imax = 0;
+    for (i = 0; i < (n/2); i++){
+        if (fabs(jacobi_t[i][0]-jacobi_t[i+1][0]) > delta){
+            delta = fabs(jacobi_t[i][0]-jacobi_t[i+1][0]);
+            imax = i;
+        }
+    }
+    return imax;
+}
+
+static PyObject* apply_kmeans_prep(PyObject *args){
+    int n, k;
+    char* goal;
+    PyOjbect *python_jacobi, *result;
+    double** jacobi, **jacobi_t;
+
+    if (!PyArg_ParseTuple(args, "siiO", &goal, &n, &k, &python_jacobi)){ return NULL; }
+    jacobi = read_from_python(n+1, n, python_jacobi);
+    if (jacobi == NULL) { return NULL; }
+
+    jacobi_t = transpose(jacobi, n+1, n);
+    if (jacobi_t == NULL) { result = NULL; }
+    sort_by_eval(jacobi_t, n);
+    if (k == 0){ k = eigen_gap(jacobi_t, n); }
+    jacobi = transpose(jacobi_t, n, n+1);
+    if (jacobi == NULL){ result = NULL; }
+    else{ result = write_to_python(jacobi + 1, n, k); }
+    free_matrix(jacobi, n+1);
+    free_matrix(jacobi_t, n);
+    return result;
+}
 
 static PyObject* apply_kmeans(PyObject *args){
     int n, k, max_iter, d;
@@ -177,7 +246,7 @@ static PyObject* apply_kmeans(PyObject *args){
     PyObject *centroid_list, *observation_list, *result;
     double** centroids, **observations
 
-    if (!PyArg_ParseTuple(args, "siiiidOO", &goal, &n, &k, &max_iter, &d, &eps, 
+    if (!PyArg_ParseTuple(args, "siiiidOO", &goal, &n, &d, &k, &max_iter, &eps, 
         &centroid_list, &observation_list)){
             return NULL;
         }
@@ -187,7 +256,7 @@ static PyObject* apply_kmeans(PyObject *args){
     (calculate_kmeans(observations, centroids, n, d, k, max_iter, eps) == 1)) {
         result = NULL;
     }
-    else { result = write_to_python(centroids, k, d);}
+    else { result = write_to_python(centroids, k, d); }
     
     free_matrix(observations, n);
     free_matrix(centroids, k);

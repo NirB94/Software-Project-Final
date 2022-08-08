@@ -406,7 +406,7 @@ double** calculate_mat(double** mat, char* goal ,int n, int d){
     double** wam, **ddg, **lnorm, **jacobi;
 
     if (strcmp(goal, "jacobi") == 0){
-        jacobi = jacobi_eval_evec(mat, n, d);
+        jacobi = jacobi_eval_evec(mat, n);
         if (jacobi == NULL){
             return NULL;
         }
