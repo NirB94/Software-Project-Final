@@ -217,13 +217,27 @@ static int eigen_gap(double** jacobi_t, n){
     return imax;
 }
 
+static void normalize(**double mat, int n, int d){
+    int i, j;
+    double s;
+
+    for (i = 0; i < n; i++){
+        s = 0;
+        for (j = 0; j < d; j++){
+            s += mat[i][j] * mat[i][j];
+        }
+        for (j = 0; j < d; j++){
+            mat[i][j] /= sqrt(s);
+        }
+    }
+}
+
 static PyObject* apply_kmeans_prep(PyObject *args){
     int n, k;
-    char* goal;
     PyOjbect *python_jacobi, *result;
     double** jacobi, **jacobi_t;
 
-    if (!PyArg_ParseTuple(args, "siiO", &goal, &n, &k, &python_jacobi)){ return NULL; }
+    if (!PyArg_ParseTuple(args, "iiO", &n, &k, &python_jacobi)){ return NULL; }
     jacobi = read_from_python(n+1, n, python_jacobi);
     if (jacobi == NULL) { return NULL; }
 
@@ -233,7 +247,10 @@ static PyObject* apply_kmeans_prep(PyObject *args){
     if (k == 0){ k = eigen_gap(jacobi_t, n); }
     jacobi = transpose(jacobi_t, n, n+1);
     if (jacobi == NULL){ result = NULL; }
-    else{ result = write_to_python(jacobi + 1, n, k); }
+    else{
+        normalize(jacobi + 1, n, n)
+        result = write_to_python(jacobi + 1, n, k); 
+    }
     free_matrix(jacobi, n+1);
     free_matrix(jacobi_t, n);
     return result;
@@ -242,11 +259,10 @@ static PyObject* apply_kmeans_prep(PyObject *args){
 static PyObject* apply_kmeans(PyObject *args){
     int n, k, max_iter, d;
     double eps;
-    char* goal;
     PyObject *centroid_list, *observation_list, *result;
     double** centroids, **observations
 
-    if (!PyArg_ParseTuple(args, "siiiidOO", &goal, &n, &d, &k, &max_iter, &eps, 
+    if (!PyArg_ParseTuple(args, "iiiidOO", &n, &d, &k, &max_iter, &eps, 
         &centroid_list, &observation_list)){
             return NULL;
         }
@@ -263,27 +279,13 @@ static PyObject* apply_kmeans(PyObject *args){
     return result;
 }
 
-static PyObject* apply(PyObject *self, PyObject *args) {
-    char* goal;
-    
-    if (!PyArg_ParseTuple(args, "s", &goal)){ return NULL; }
-    
-    if ((strcmp(goal, "kmeans_prep") != 0) && (strcmp(goal, "kmeans") != 0)){
-        return apply_mat_ops(args);
-    }
-    
-    if (strcmp(goal, "kmeans_prep") == 0){
-        return apply_kmeans_prep(args);
-    }
-
-    else{ return apply_kmeans(args); }
-}
-
 /*
 Python module setup
 */
 static PyMethodDef capiMethods[] = {
-    {"apply", (PyCFunction) apply, METH_VARARGS, NULL},
+    {"apply_mat_ops", (PyCFunction) apply_mat_ops, METH_VARARGS, NULL},
+    {"apply_kmeans_prep", (PyCFunction) apply_kmeans_prep, METH_VARARGS, NULL},
+    {"apply_kmeans", (PyCFunction) apply_kmeans, METH_VARARGS, NULL}
     {NULL, NULL, 0, NULL}
 };
 
