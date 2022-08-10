@@ -47,6 +47,7 @@ def main():
             print("An Error Has Occurred")
             return
         k = len(T[0])
+        
     
 def receive_input():
     assert len(sys.argv) == 4
@@ -57,5 +58,29 @@ def receive_input():
     assert((sys.argv[2] in MAT_OPS) or (sys.argv[2] == "spk"))
     return k, sys.argv[2], sys.argv[3]
 
+'''
+The function finds the distance of the closest centroid to x.
+The distance is measured using the euclidean distance.
+The function assumes the dimension of the centroids and of x is the same.
+'''
+def find_closest_distance(x, centroids):
+    minimal_distance = sum((x-centroids[0]) ** 2)
+    for i in range(1, len(centroids)):
+        minimal_distance = min(minimal_distance, sum((x-centroids[i]) ** 2))
+    return minimal_distance
+
+
 def kmeanspp(k, obs):
     np.random.seed(0)
+    indices = [np.random.choice(range(len(obs)))]
+    centroids = np.array(obs[indices[0]])
+    for i in range(1, k):
+        distances = np.array([find_closest_distance(obs[j], centroids) for j in range(len(obs))])
+        s = sum(distances)
+        probs = distances / s
+        indices.append(np.random.choice(range(len(obs)), p=probs))
+        centroids = np.append(centroids, np.array(obs[indices[-1]]), axis = 0)
+    return centroids, indices
+
+if __name__ == "__main__":
+    main()
