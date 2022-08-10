@@ -151,9 +151,9 @@ static PyObject* write_to_python(double** mat, int n, int d){
     return outer_list;
 }
 
-static PyObject* apply_mat_ops(PyObject *args){
+static PyObject* apply_mat_ops(PyObject *self, PyObject *args){
     double** mat, **result;
-    PyObject* python_mat, *python_result;
+    PyObject *python_mat, *python_result;
     char* goal;
     int n, d, jacobi_flag;
     if (!PyArg_ParseTuple(args, "siiO", &goal, &n, &d, &python_mat)){ return NULL; }
@@ -230,7 +230,7 @@ static void normalize(double** mat, int n, int d){
     }
 }
 
-static PyObject* apply_kmeans_prep(PyObject *args){
+static PyObject* apply_kmeans_prep(PyObject *self, PyObject *args){
     int n, k;
     PyObject *python_jacobi, *result;
     double** jacobi, **jacobi_t;
@@ -254,7 +254,7 @@ static PyObject* apply_kmeans_prep(PyObject *args){
     return result;
 }
 
-static PyObject* apply_kmeans(PyObject *args){
+static PyObject* apply_kmeans(PyObject *self, PyObject *args){
     int n, k, max_iter, d;
     double eps;
     PyObject *centroid_list, *observation_list, *result;
