@@ -243,11 +243,14 @@ static PyObject* apply_kmeans_prep(PyObject *self, PyObject *args){
     if (jacobi_t == NULL) { result = NULL; }
     sort_by_eval(jacobi_t, n);
     if (k == 0){ k = eigen_gap(jacobi_t, n); }
-    jacobi = transpose(jacobi_t, n, n+1);
-    if (jacobi == NULL){ result = NULL; }
     else{
-        normalize(jacobi + 1, n, n);
-        result = write_to_python(jacobi + 1, n, k); 
+        free_matrix(jacobi, n+1);
+        jacobi = transpose(jacobi_t, n, n+1);
+        if (jacobi == NULL){ result = NULL; }
+        else{
+            normalize(jacobi + 1, n, n);
+            result = write_to_python(jacobi + 1, n, k); 
+        }
     }
     free_matrix(jacobi, n+1);
     free_matrix(jacobi_t, n);
