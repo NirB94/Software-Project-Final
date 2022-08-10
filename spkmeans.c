@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include <math.h>
 #include <string.h>
+#include "spkmeans.h"
 
 
 void free_matrix(double** mat, int n) {
