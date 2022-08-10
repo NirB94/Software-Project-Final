@@ -2,7 +2,7 @@
 #include <Python.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <spkmeans.h>
+#include "spkmeans.h"
 #include <string.h>
 #include <math.h>
 
@@ -153,12 +153,10 @@ static PyObject* write_to_python(double** mat, int n, int d){
 
 static PyObject* apply_mat_ops(PyObject *args){
     double** mat, **result;
-    PyObject* python_mat, python_result;
+    PyObject* python_mat, *python_result;
     char* goal;
     int n, d, jacobi_flag;
-
     if (!PyArg_ParseTuple(args, "siiO", &goal, &n, &d, &python_mat)){ return NULL; }
-    
     mat = read_from_python(n, d, python_mat);
     if (mat == NULL){ return NULL; }
     
@@ -167,7 +165,7 @@ static PyObject* apply_mat_ops(PyObject *args){
     
     if (result == NULL){ return NULL; }
     jacobi_flag = (strcmp(goal, "jacobi") == 0);
-    python_result = write_to_python(result, n + jacobi_flag, n)
+    python_result = write_to_python(result, n + jacobi_flag, n);
     free_matrix(result, n + jacobi_flag);
     return python_result;
 }
@@ -176,7 +174,7 @@ static double** transpose(double** mat, int n, int d){
     double** result;
     int i, j;
 
-    result = calloc(n, sizeof(*double));
+    result = calloc(n, sizeof(double*));
     if (result == NULL){ return NULL; }
     for (i = 0; i < n; i++){
         result[i] = calloc(d, sizeof(double));
@@ -193,16 +191,16 @@ static double** transpose(double** mat, int n, int d){
 
 static int comparator(const void *x, const void *y)
 {
-    const double * dx = (const double *) x
+    const double * dx = (const double *) x;
     const double * dy = (const double *) y;
     return dx[0] >= dy[0] ? -1 : dx[0] < dy[0];
 }
 
 static void sort_by_eval(double** jacobi_t, int n){
-    qsort(jacobi_t, n, sizeof(*double), comparator);
+    qsort(jacobi_t, n, sizeof(double*), comparator);
 }
 
-static int eigen_gap(double** jacobi_t, n){
+static int eigen_gap(double** jacobi_t, int n){
     int i, imax;
     double delta;
 
@@ -217,7 +215,7 @@ static int eigen_gap(double** jacobi_t, n){
     return imax;
 }
 
-static void normalize(**double mat, int n, int d){
+static void normalize(double** mat, int n, int d){
     int i, j;
     double s;
 
@@ -234,7 +232,7 @@ static void normalize(**double mat, int n, int d){
 
 static PyObject* apply_kmeans_prep(PyObject *args){
     int n, k;
-    PyOjbect *python_jacobi, *result;
+    PyObject *python_jacobi, *result;
     double** jacobi, **jacobi_t;
 
     if (!PyArg_ParseTuple(args, "iiO", &n, &k, &python_jacobi)){ return NULL; }
@@ -248,7 +246,7 @@ static PyObject* apply_kmeans_prep(PyObject *args){
     jacobi = transpose(jacobi_t, n, n+1);
     if (jacobi == NULL){ result = NULL; }
     else{
-        normalize(jacobi + 1, n, n)
+        normalize(jacobi + 1, n, n);
         result = write_to_python(jacobi + 1, n, k); 
     }
     free_matrix(jacobi, n+1);
@@ -260,7 +258,7 @@ static PyObject* apply_kmeans(PyObject *args){
     int n, k, max_iter, d;
     double eps;
     PyObject *centroid_list, *observation_list, *result;
-    double** centroids, **observations
+    double** centroids, **observations;
 
     if (!PyArg_ParseTuple(args, "iiiidOO", &n, &d, &k, &max_iter, &eps, 
         &centroid_list, &observation_list)){
@@ -285,7 +283,7 @@ Python module setup
 static PyMethodDef capiMethods[] = {
     {"apply_mat_ops", (PyCFunction) apply_mat_ops, METH_VARARGS, NULL},
     {"apply_kmeans_prep", (PyCFunction) apply_kmeans_prep, METH_VARARGS, NULL},
-    {"apply_kmeans", (PyCFunction) apply_kmeans, METH_VARARGS, NULL}
+    {"apply_kmeans", (PyCFunction) apply_kmeans, METH_VARARGS, NULL},
     {NULL, NULL, 0, NULL}
 };
 
