@@ -51,7 +51,7 @@ def main():
             k = len(T[0])
             initial_centroids, indices = kmeanspp(k, T)
             print(",".join([str(elem) for elem in indices]))
-            final_centroids = spk.apply_kmeans(len(T), len(T[0]), k, 300, 0, initial_centroids.tolist(), T)
+            final_centroids = spk.apply_kmeans(len(T), len(T[0]), k, 300, 0.0, initial_centroids.tolist(), T)
             assert(final_centroids != None)
             print_mat(final_centroids)
             return
@@ -83,13 +83,14 @@ def find_closest_distance(x, centroids):
 def kmeanspp(k, obs):
     np.random.seed(0)
     indices = [np.random.choice(range(len(obs)))]
-    centroids = np.array(obs[indices[0]])
+    centroids = np.array([obs[indices[0]]])
     for i in range(1, k):
         distances = np.array([find_closest_distance(obs[j], centroids) for j in range(len(obs))])
         s = sum(distances)
         probs = distances / s
-        indices.append(np.random.choice(range(len(obs)), p=probs))
-        centroids = np.append(centroids, np.array(obs[indices[-1]]), axis = 0)
+        rand_index = np.random.choice(range(len(obs)), p=probs)
+        indices.append(rand_index)
+        centroids = np.append(centroids, np.array([obs[rand_index]]), axis = 0)
     return centroids, indices
 
 def print_mat(mat):

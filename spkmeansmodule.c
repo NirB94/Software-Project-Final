@@ -174,15 +174,15 @@ static double** transpose(double** mat, int n, int d){
     double** result;
     int i, j;
 
-    result = calloc(n, sizeof(double*));
+    result = calloc(d, sizeof(double*));
     if (result == NULL){ return NULL; }
-    for (i = 0; i < n; i++){
-        result[i] = calloc(d, sizeof(double));
+    for (i = 0; i < d; i++){
+        result[i] = calloc(n, sizeof(double));
         if (result[i] == NULL){
             free_matrix(result, i);
             return NULL;
         }
-        for (j = 0; j < d; j++){
+        for (j = 0; j < n; j++){
             result[i][j] = mat[j][i];
         }
     }
@@ -241,15 +241,15 @@ static PyObject* apply_kmeans_prep(PyObject *self, PyObject *args){
 
     jacobi_t = transpose(jacobi, n+1, n);
     if (jacobi_t == NULL) { result = NULL; }
-    sort_by_eval(jacobi_t, n);
-    if (k == 0){ k = eigen_gap(jacobi_t, n); }
     else{
+        sort_by_eval(jacobi_t, n);
+        if (k == 0){ k = eigen_gap(jacobi_t, n); }
         free_matrix(jacobi, n+1);
         jacobi = transpose(jacobi_t, n, n+1);
         if (jacobi == NULL){ result = NULL; }
         else{
             normalize(jacobi + 1, n, n);
-            result = write_to_python(jacobi + 1, n, k); 
+            result = write_to_python(jacobi + 1, n, k);
         }
     }
     free_matrix(jacobi, n+1);
