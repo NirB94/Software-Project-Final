@@ -1,5 +1,6 @@
 from cmath import exp
 import sys
+from typing import final
 import numpy as np
 import spkmeansmodule as spk
 MAT_OPS = ("wam", "ddg", "lnorm", "jacobi")
@@ -24,11 +25,12 @@ def main():
         result = spk.apply_mat_ops(goal, n, d, obs.tolist())
         try:
             assert(result != None)
+            print_mat(result)
         except(AssertionError):
             print("An Error Has Occurred")
             return
     else:
-        lnorm = spk.apply_mat_ops("lnorm", n, d, obs)
+        lnorm = spk.apply_mat_ops("lnorm", n, d, obs.tolist())
         try:
             assert(lnorm != None)
         except(AssertionError):
@@ -46,8 +48,17 @@ def main():
         except(AssertionError):
             print("An Error Has Occurred")
             return
-        k = len(T[0])
-        
+        try:
+            k = len(T[0])
+            initial_centroids, indices = kmeanspp(k, T)
+            print(",".join([str(elem) for elem in indices]))
+            final_centroids = spk.apply_kmeans(len(T), len(T[0]), k, 300, 0, initial_centroids.tolist(), T)
+            assert(final_centroids != None)
+            print_mat(final_centroids)
+            return
+        except(AssertionError):
+            print("An Error Has Occurred")
+            return
     
 def receive_input():
     assert len(sys.argv) == 4
@@ -81,6 +92,10 @@ def kmeanspp(k, obs):
         indices.append(np.random.choice(range(len(obs)), p=probs))
         centroids = np.append(centroids, np.array(obs[indices[-1]]), axis = 0)
     return centroids, indices
+
+def print_mat(mat):
+    for i in range(len(mat)):
+        print(','.join(["%.4f" % elem for elem in mat[i]]))
 
 if __name__ == "__main__":
     main()
