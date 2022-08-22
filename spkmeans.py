@@ -1,12 +1,11 @@
 import sys
 import numpy as np
 import spkmeansmodule as spk
-import pandas as pd
-MAT_OPS = ("wam", "ddg", "lnorm", "jacobi")
+MAT_OPS = ("wam", "ddg", "lnorm", "jacobi") # designated words for matrix operations.
 
 def main():
     try:
-        k, goal, file_path = receive_input()
+        k, goal, file_path = receive_input() # Receive and validate input
     except(AssertionError):
         print("Invalid Input")
         return
@@ -20,7 +19,7 @@ def main():
     except:
         print("An Error Has Occurred")
         return
-    if goal in MAT_OPS:
+    if goal in MAT_OPS: # If a matrix operation is desired
         result = spk.apply_mat_ops(goal, n, d, obs.tolist())
         try:
             assert(result != None)
@@ -28,20 +27,20 @@ def main():
         except(AssertionError):
             print("An Error Has Occurred")
             return
-    else:
-        lnorm = spk.apply_mat_ops("lnorm", n, d, obs.tolist())
+    else: # Else, full sp kmeans is desired
+        lnorm = spk.apply_mat_ops("lnorm", n, d, obs.tolist()) # Calculate lnorm
         try:
             assert(lnorm != None)
         except(AssertionError):
             print("An Error Has Occurred")
             return
-        jacobi = spk.apply_mat_ops("jacobi", n, d, lnorm)
+        jacobi = spk.apply_mat_ops("jacobi", n, d, lnorm) # Calculate e-values and e-vectors
         try:
             assert(jacobi != None)
         except(AssertionError):
             print("An Error Has Occurred")
             return
-        T = spk.apply_kmeans_prep(n, k, jacobi)
+        T = spk.apply_kmeans_prep(n, k, jacobi) # Normalize e-vectors and find best heuristic k
         try:
             assert(T != None)
         except(AssertionError):
@@ -49,9 +48,10 @@ def main():
             return
         try:
             k = len(T[0])
-            initial_centroids, indices = kmeanspp(k, T)
-            print(",".join([str(elem) for elem in indices]))
-            final_centroids = spk.apply_kmeans(len(T), len(T[0]), k, 300, 0.0, initial_centroids.tolist(), T)
+            initial_centroids, indices = kmeanspp(k, T) # Initialize kmeans++ with T and k
+            print(",".join([str(elem) for elem in indices])) # Print initial indices
+            final_centroids = spk.apply_kmeans(len(T), len(T[0]), k, 300, 0.0, 
+                                                initial_centroids.tolist(), T) # Perform kmeans
             assert(final_centroids != None)
             print_mat(final_centroids)
             return
@@ -65,7 +65,7 @@ def receive_input():
         k = int(sys.argv[1])
     except:
         assert 1 == 0
-    assert((sys.argv[2] in MAT_OPS) or (sys.argv[2] == "spk"))
+    assert((sys.argv[2] in MAT_OPS) or (sys.argv[2] == "spk")) # Validate the goal
     return k, sys.argv[2], sys.argv[3]
 
 '''
@@ -79,7 +79,11 @@ def find_closest_distance(x, centroids):
         minimal_distance = min(minimal_distance, sum((x-centroids[i]) ** 2))
     return minimal_distance
 
-
+'''
+The function implements the kmeans++ algorithm.
+The function uses weights to randomly choose the first K centroids from the observations.
+The weights are assigned with regards to the euclidean distance from current centroids.
+'''
 def kmeanspp(k, obs):
     np.random.seed(0)
     indices = [np.random.choice(range(len(obs)))]
