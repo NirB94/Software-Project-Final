@@ -37,7 +37,7 @@ int first_input_validation(int length_of_input, char *input[])
 }
 
 /*
-The function retrieves the dimension of the input file.
+The function retrieves the dimensions of the input file.
 The function inputs said dimensions (# of rows and columns) into the dims array.
 */
 int find_dimensions(char const *filename, int *dims){
@@ -123,6 +123,10 @@ double euclid_dist(double* x, double* y, int d){
     return sqrt(dist);
 }
 
+/*
+The function receives an array of n observations with d elements each (of type double).
+The function calculates the weighted adjacency matrix of the observations.
+*/
 double** weighted_adj_mat(double** obs, int n, int d){
     double** wam;
     int i, j;
@@ -150,6 +154,10 @@ double** weighted_adj_mat(double** obs, int n, int d){
     return wam;
 }
 
+/*
+The function receives a weighted adjacency matrix of size n*n.
+The function calculates the apropriate diagonal degree matrix.
+*/
 double** diag_deg_mat(double** wam, int n){
     double** ddg;
     int i, j;
@@ -173,6 +181,11 @@ double** diag_deg_mat(double** wam, int n){
     return ddg;
 }
 
+/*
+The function receives a weighted adjacency matrix and its apropriate diagonal degree matrix.
+Both matrices are of size n*n.
+The function calculates the apropriate normalized graph laplacian.
+*/
 double** norm_graph_lap(double** wam, double** ddg, int n){
     double** lnorm;
     int i, j;
@@ -201,12 +214,16 @@ double** norm_graph_lap(double** wam, double** ddg, int n){
             lnorm[j][i] = lnorm[i][j];
         }
     }
-    for (i = 0; i < n; i++){ /* Consider deleting! */
+    for (i = 0; i < n; i++){ /* Restoring the received ddg (even though it isn't used later)*/
         ddg[i][i] = 1 / (ddg[i][i] * ddg[i][i]);
     }
     return lnorm;
 }
 
+/*
+The function receives a symmetric double matrix of size n*n.
+The function finds the pair of indices of the maximal off-diagonal element (in absolute terms).
+*/
 int* max_abs_off_diag(double** mat, int n){
     int i, j;
     int *max_indices;
@@ -229,6 +246,10 @@ int* max_abs_off_diag(double** mat, int n){
     return max_indices;
 }
 
+/*
+The function receives a symmetric double matrix of size n*n.
+The function calculates the sum of its squared off-diagonal elements.
+*/
 double sum_off_diag_sq(double** mat, int n){
     int i, j;
     double s = 0;
@@ -241,6 +262,11 @@ double sum_off_diag_sq(double** mat, int n){
     return s;
 }
 
+/*
+The function receives the n*n sized e-vector matrix V, the indices i & j, and the values c & s.
+The function multiples V = V * P.
+The matrix P is given as described in the instructions.
+*/
 int update_e_vector_mat(double** V, double c, double s, int n, int i, int j){
     double* v1, *v2;
     int k;
@@ -256,8 +282,8 @@ int update_e_vector_mat(double** V, double c, double s, int n, int i, int j){
         return 1;
     }    
     for (k = 1; k < n+1; k++){
-            v1[k-1] = c * V[k][i] - s * V[k][j];
-            v2[k-1] = s * V[k][i] + c * V[k][j];
+            v1[k-1] = c * V[k][i] - s * V[k][j]; /* new ith column = c*(ith column) - s*(jth column) */
+            v2[k-1] = s * V[k][i] + c * V[k][j]; /* new jth column = s*(ith column) + c*(jth column) */
         }
     for (k = 1; k < n+1; k++){
         V[k][i] = v1[k-1];
@@ -268,6 +294,11 @@ int update_e_vector_mat(double** V, double c, double s, int n, int i, int j){
     return 0;
 }
 
+/*
+The function receives the n*n sized matrix A, the indices i & j, and the values c & s.
+The function multiplies A = P^T * A * P.
+The matrix P is given as described in the instructions.
+*/
 int update_e_value_mat(double** A, double c, double s, int n, int i, int j){
     double** temp;
     int r;
@@ -314,6 +345,12 @@ int update_e_value_mat(double** A, double c, double s, int n, int i, int j){
     return 0;
 }
 
+/*
+The function receives a symmetric double matrix of size n*n.
+The function uses the Jacobi iterative method to calculate the matrix' e-values and e-vectors.
+The function returns the matrix V whose first row is the e-values, 
+and the column below each value is the corresponding e-vector.
+*/
 double** jacobi_eval_evec(double** mat, int n){
     double** A, **V;
     int* midx;
@@ -392,6 +429,10 @@ double** jacobi_eval_evec(double** mat, int n){
     return V;
 }
 
+/*
+The function receives a double matrix of size n*d.
+The function prints the matrix row by row with 4 digits to the right of the dot.
+*/
 void print_mat(double** mat, int n, int d) {
     int i, j;
     
@@ -403,6 +444,10 @@ void print_mat(double** mat, int n, int d) {
     }
 }
 
+/*
+The function is a wrapper function that recieves a double matrix of size n*d.
+The function navigates through the needed functions in order to produce the desired goal.
+*/
 double** calculate_mat(double** mat, char* goal ,int n, int d){
     double** wam, **ddg, **lnorm, **jacobi;
 
@@ -471,10 +516,11 @@ int main(int argc, char *argv[]){
     }
 
     result = calculate_mat(obs, goal, dims[0], dims[1]);
+    free_matrix(obs, dims[0]);
     if (result == NULL){
         return 1;
     }
-    jacobi_flag = strcmp(goal, "jacobi") == 0;
+    jacobi_flag = strcmp(goal, "jacobi") == 0;  /* A boolean flag for jacobi specific use */
     print_mat(result, dims[0] + jacobi_flag, dims[1]);
     free_matrix(result, dims[0] + jacobi_flag);
     return 0;
