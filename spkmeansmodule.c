@@ -151,6 +151,10 @@ static PyObject* write_to_python(double** mat, int n, int d){
     return outer_list;
 }
 
+/*
+The function receives a goal, and a Python matrix of size n*d.
+The function applies the desired goal to the matrix and returns it (in Python form).
+*/
 static PyObject* apply_mat_ops(PyObject *self, PyObject *args){
     double** mat, **result;
     PyObject *python_mat, *python_result;
@@ -170,6 +174,10 @@ static PyObject* apply_mat_ops(PyObject *self, PyObject *args){
     return python_result;
 }
 
+/*
+The function receives a double matrix of size n*d.
+The function returns the transpose of said matrix.
+*/
 static double** transpose(double** mat, int n, int d){
     double** result;
     int i, j;
@@ -189,6 +197,11 @@ static double** transpose(double** mat, int n, int d){
     return result;
 }
 
+/*
+The function compares between two double arrays.
+The first array is lesser than the second iff its first element is greater or equal than 
+that of the second array.
+*/
 static int comparator(const void *x, const void *y)
 {
     const double * dx = (const double *) x;
@@ -196,10 +209,24 @@ static int comparator(const void *x, const void *y)
     return dx[0] >= dy[0] ? -1 : dx[0] < dy[0];
 }
 
+/*
+The function receives the tranpose of the Jacobi matrix.
+The first column is comprised of the e-vals, and the rest of each row is the corresponding
+e-vector. 
+The function sorts (using qsort) the matrix by the first element of each row (by e-vals).
+The sorting is done decreasingly (larger e-vals first).
+*/
 static void sort_by_eval(double** jacobi_t, int n){
     qsort(jacobi_t, n, sizeof(double*), comparator);
 }
 
+/*
+The function receives the tranpose of the Jacobi matrix.
+The first column is comprised of the e-vals, and the rest of each row is the corresponding
+e-vector. 
+The function calculates the largest eigen gap between the sorted e-vals, and returns the
+appropriate index.
+*/
 static int eigen_gap(double** jacobi_t, int n){
     int i, imax;
     double delta;
@@ -215,6 +242,10 @@ static int eigen_gap(double** jacobi_t, int n){
     return imax;
 }
 
+/*
+The function receives a double matrix of size n*d.
+The function normalizes each row (by the square root of the sum of its squares).
+*/
 static void normalize(double** mat, int n, int d){
     int i, j;
     double s;
@@ -224,12 +255,19 @@ static void normalize(double** mat, int n, int d){
         for (j = 0; j < d; j++){
             s += mat[i][j] * mat[i][j];
         }
+        s = sqrt(s);
         for (j = 0; j < d; j++){
-            mat[i][j] /= sqrt(s);
+            mat[i][j] /= s;
         }
     }
 }
 
+/*
+The function receives a Python jacobi matrix with n e-vectors, and a k value.
+The function decreasingly sorts the columns by their first elements (e-vals).
+If the k value received is 0, the function also applies the eigen-gap heuristic.
+Then, the function returns the k first columns of the sorted matrix after normalization.
+*/
 static PyObject* apply_kmeans_prep(PyObject *self, PyObject *args){
     int n, k;
     PyObject *python_jacobi, *result;
@@ -257,6 +295,14 @@ static PyObject* apply_kmeans_prep(PyObject *self, PyObject *args){
     return result;
 }
 
+/*
+The function receives the following arguments needed for the kmeans algorithm:
+n - num of observations, k - num of centroids, max_iter, d - dimension of observations,
+eps - convergence bound, centroid_list - first centroids (randomly calculatd in Python),
+observation_list - observations.
+The function converts the required data to be usable in C, applies the kmeans algorithm, 
+converts the results back to be usable in python and returns them.
+*/
 static PyObject* apply_kmeans(PyObject *self, PyObject *args){
     int n, k, max_iter, d;
     double eps;
