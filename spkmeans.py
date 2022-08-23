@@ -1,5 +1,6 @@
 import sys
 import numpy as np
+import pandas as pd
 import spkmeansmodule as spk
 MAT_OPS = ("wam", "ddg", "lnorm", "jacobi") # designated words for matrix operations.
 
@@ -7,14 +8,15 @@ def main():
     try:
         k, goal, file_path = receive_input() # Receive and validate input
     except(AssertionError):
-        print("Invalid Input")
+        print("Invalid Input!")
         return
     try:
-        obs = np.genfromtxt(file_path, delimiter= ',')
-        n, d = obs.shape[0], obs.shape[1]
+        obs = pd.read_csv(file_path, header=None)
+        obs = obs.to_numpy()
+        n,d = obs.shape[0], obs.shape[1]
         assert(k < n)
     except(AssertionError):
-        print("Invalid Input")
+        print("Invalid Input!")
         return
     except:
         print("An Error Has Occurred")

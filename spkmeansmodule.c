@@ -163,7 +163,6 @@ static PyObject* apply_mat_ops(PyObject *self, PyObject *args){
     if (!PyArg_ParseTuple(args, "siiO", &goal, &n, &d, &python_mat)){ return NULL; }
     mat = read_from_python(n, d, python_mat);
     if (mat == NULL){ return NULL; }
-    
     result = calculate_mat(mat, goal, n, d);
     free_matrix(mat, n);
     
@@ -225,7 +224,7 @@ The function receives the tranpose of the Jacobi matrix.
 The first column is comprised of the e-vals, and the rest of each row is the corresponding
 e-vector. 
 The function calculates the largest eigen gap between the sorted e-vals, and returns the
-appropriate index.
+appropriate amount of centroids to take.
 */
 static int eigen_gap(double** jacobi_t, int n){
     int i, imax;
@@ -239,7 +238,7 @@ static int eigen_gap(double** jacobi_t, int n){
             imax = i;
         }
     }
-    return imax;
+    return imax+1;
 }
 
 /*

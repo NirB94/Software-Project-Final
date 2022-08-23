@@ -346,12 +346,13 @@ double** jacobi_eval_evec(double** mat, int n){
     int i, j, iter, flag;
     double sso1, sso2, eps, s, c, theta, t;
     
+    flag = 0;
     eps = 0.00001;
     iter = 100;
     A = calloc(n, sizeof(double*));
     if (A == NULL) {
         return NULL;
-    }    
+    }
     V = calloc(n+1, sizeof(double*));
     if (V == NULL) {
         return NULL;
@@ -376,36 +377,36 @@ double** jacobi_eval_evec(double** mat, int n){
             V[i][i-1] = 1;
         }
     }
-    
-    flag = 0;
-    sso2 = sum_off_diag_sq(A, n);
-    do
-    {
-        sso1 = sso2;
-        midx = max_abs_off_diag(A, n);
-        if (A[midx[0]][midx[1]] == 0) { break; } /* If reached a diagonal matrix, done */
-        theta = (A[midx[1]][midx[1]] - A[midx[0]][midx[0]]) / (2 * A[midx[0]][midx[1]]);
-        t = sign(theta) / (fabs(theta) + sqrt(theta * theta + 1));
-        c = 1 / sqrt(t * t + 1);
-        s = t * c;
-        if (update_e_value_mat(A, c, s, n, midx[0], midx[1]) == 1){
-            flag = 1;
-            break;
-        }
+
+    if (n > 1){
         sso2 = sum_off_diag_sq(A, n);
-        iter--;
-        if (update_e_vector_mat(V, c, s, n, midx[0], midx[1]) == 1){
-            flag = 1;
-            break;
-        }
-    } while (sso1 - sso2 > eps || iter > 0);
-    
+        do
+        {
+            sso1 = sso2;
+            midx = max_abs_off_diag(A, n);
+            if (A[midx[0]][midx[1]] == 0) { break; } /* If reached a diagonal matrix, done */
+            theta = (A[midx[1]][midx[1]] - A[midx[0]][midx[0]]) / (2 * A[midx[0]][midx[1]]);
+            t = sign(theta) / (fabs(theta) + sqrt(theta * theta + 1));
+            c = 1 / sqrt(t * t + 1);
+            s = t * c;
+            if (update_e_value_mat(A, c, s, n, midx[0], midx[1]) == 1){
+                flag = 1;
+                break;
+            }
+            sso2 = sum_off_diag_sq(A, n);
+            iter--;
+            if (update_e_vector_mat(V, c, s, n, midx[0], midx[1]) == 1){
+                flag = 1;
+                break;
+            }
+        } while (sso1 - sso2 > eps || iter > 0);
+        free(midx);
+    }
     if (flag == 0){
         for (i = 0; i < n; i++){
             V[0][i] = A[i][i];
         }
     }
-    free(midx);
     free_matrix(A, n);
 
     if (flag == 1){
