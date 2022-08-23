@@ -25,12 +25,12 @@ Then, the function checks whether goal is valid.
 int first_input_validation(int length_of_input, char *input[])
 {
     if (length_of_input != 3){
-        printf("Invalid Input!");
+        printf("Invalid Input!\n");
         return 1;
     }
     if (strcmp(input[1], "wam") != 0 && strcmp(input[1], "ddg") != 0 && strcmp(input[1], "lnorm") != 0 &&
     strcmp(input[1], "jacobi") != 0){
-        printf("Invalid Input!");
+        printf("Invalid Input!\n");
         return 1;
     }
     return 0;
@@ -47,7 +47,7 @@ int find_dimensions(char const *filename, int *dims){
     f = fopen(filename, "r");
     if (f == NULL) {
         fclose(f);
-        printf("An Error Has Occurred");
+        printf("An Error Has Occurred\n");
         return 1;
     }
     dims[0] = 0;
@@ -83,12 +83,12 @@ double** read_file(char const *filename, int n, int d) {
     f = fopen(filename, "r");
     if (f == NULL) {
         fclose(f);
-        printf("An Error Has Occurred");
+        printf("An Error Has Occurred\n");
         return NULL;
     }
     obs = calloc(n, sizeof(double*));
     if (obs == NULL) {
-        printf("An Error Has Occurred");
+        printf("An Error Has Occurred\n");
         return NULL;
     }
     for (i = 0; i < n; i++)
@@ -96,7 +96,7 @@ double** read_file(char const *filename, int n, int d) {
         obs[i] = calloc(d, sizeof(double));
         if (obs[i] == NULL) {
             free_matrix(obs, i);
-            printf("An Error Has Occurred");
+            printf("An Error Has Occurred\n");
             return NULL;
         }
         for (j = 0; j < d; j++)
@@ -504,7 +504,7 @@ int main(int argc, char *argv[]){
     result = calculate_mat(obs, goal, dims[0], dims[1]);
     free_matrix(obs, dims[0]);
     if (result == NULL){
-        printf("An Error Has Occurred");
+        printf("An Error Has Occurred\n");
         return 1;
     }
     jacobi_flag = strcmp(goal, "jacobi") == 0;  /* A boolean flag for jacobi specific use */
