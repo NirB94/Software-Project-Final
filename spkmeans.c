@@ -133,14 +133,12 @@ double** weighted_adj_mat(double** obs, int n, int d){
 
     wam = calloc(n, sizeof(double*));
     if (wam == NULL) {
-        printf("An Error Has Occurred");
         return NULL;
     }
     for (i = 0; i < n; i++){
         wam[i] = calloc(n, sizeof(double));
         if (wam[i] == NULL) { 
             free_matrix(wam, i);
-            printf("An Error Has Occurred");
             return NULL;
         }
         wam[i][i] = 0;
@@ -164,14 +162,12 @@ double** diag_deg_mat(double** wam, int n){
 
     ddg = calloc(n, sizeof(double*));
     if (ddg == NULL) {
-        printf("An Error Has Occurred");
         return NULL;
     }
     for (i = 0; i < n; i++){
         ddg[i] = calloc(n, sizeof(double));
         if (ddg[i] == NULL) {
             free_matrix(ddg, i);
-            printf("An Error Has Occurred");
             return NULL;
         }
         for (j = 0; j < n; j++){
@@ -196,14 +192,12 @@ double** norm_graph_lap(double** wam, double** ddg, int n){
     
     lnorm = calloc(n, sizeof(double*));
     if (lnorm == NULL) {
-        printf("An Error Has Occurred");
         return NULL;
     }
     for (i = 0; i < n; i++){
         lnorm[i] = calloc(n, sizeof(double));
         if (lnorm[i] == NULL) { 
             free_matrix(lnorm, i);
-            printf("An Error Has Occurred");
             return NULL;
         }
         lnorm[i][i] = 1;
@@ -230,7 +224,6 @@ int* max_abs_off_diag(double** mat, int n){
     
     max_indices = calloc(2, sizeof(int));
     if (max_indices == NULL) {
-        printf("An Error Has Occurred");
         return NULL;
     }
     max_indices[0] = 0;
@@ -273,12 +266,10 @@ int update_e_vector_mat(double** V, double c, double s, int n, int i, int j){
     
     v1 = calloc(n, sizeof(double));
     if (v1 == NULL) {
-        printf("An Error Has Occurred");
         return 1;
     }
     v2 = calloc(n, sizeof(double));
     if (v2 == NULL) {
-        printf("An Error Has Occurred");
         return 1;
     }    
     for (k = 1; k < n+1; k++){
@@ -306,14 +297,12 @@ int update_e_value_mat(double** A, double c, double s, int n, int i, int j){
 
     temp = calloc(2, sizeof(double*));
     if (temp == NULL) {
-        printf("An Error Has Occurred");
         return 1;
     }
     for (r = 0; r < 2; r++){
         temp[r] = calloc(n, sizeof(double));
         if (temp[r] == NULL){
             free_matrix(temp, r);
-            printf("An Error Has Occurred");
             return 1;
         }
     }
@@ -360,13 +349,11 @@ double** jacobi_eval_evec(double** mat, int n){
     eps = 0.00001;
     iter = 100;
     A = calloc(n, sizeof(double*));
-    if (A == NULL) {            
-        printf("An Error Has Occurred");
+    if (A == NULL) {
         return NULL;
     }    
     V = calloc(n+1, sizeof(double*));
     if (V == NULL) {
-        printf("An Error Has Occurred");
         return NULL;
     }
     for (i = 0; i < n+1; i++){
@@ -374,7 +361,6 @@ double** jacobi_eval_evec(double** mat, int n){
             A[i] = calloc(n, sizeof(double));
             if (A[i] == NULL) {
                 free_matrix(A, i);
-                printf("An Error Has Occurred");
                 return NULL;
             }
             for (j = 0; j < n; j++){
@@ -384,7 +370,6 @@ double** jacobi_eval_evec(double** mat, int n){
         V[i] = calloc(n, sizeof(double));
         if (V[i] == NULL) {
             free_matrix(V, i);
-            printf("An Error Has Occurred");
             return NULL;
         }
         if (i > 0){    
@@ -518,6 +503,7 @@ int main(int argc, char *argv[]){
     result = calculate_mat(obs, goal, dims[0], dims[1]);
     free_matrix(obs, dims[0]);
     if (result == NULL){
+        printf("An Error Has Occurred");
         return 1;
     }
     jacobi_flag = strcmp(goal, "jacobi") == 0;  /* A boolean flag for jacobi specific use */
