@@ -383,6 +383,7 @@ double** jacobi_eval_evec(double** mat, int n){
     {
         sso1 = sso2;
         midx = max_abs_off_diag(A, n);
+        if (A[midx[0]][midx[1]] == 0) { break; } /* If reached a diagonal matrix, done */
         theta = (A[midx[1]][midx[1]] - A[midx[0]][midx[0]]) / (2 * A[midx[0]][midx[1]]);
         t = sign(theta) / (fabs(theta) + sqrt(theta * theta + 1));
         c = 1 / sqrt(t * t + 1);
