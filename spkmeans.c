@@ -86,14 +86,14 @@ double** read_file(char const *filename, int n, int d) {
         printf("An Error Has Occurred\n");
         return NULL;
     }
-    obs = calloc(n, sizeof(double*));
+    obs = (double**) calloc(n, sizeof(double*));
     if (obs == NULL) {
         printf("An Error Has Occurred\n");
         return NULL;
     }
     for (i = 0; i < n; i++)
     {
-        obs[i] = calloc(d, sizeof(double));
+        obs[i] = (double*) calloc(d, sizeof(double));
         if (obs[i] == NULL) {
             free_matrix(obs, i);
             printf("An Error Has Occurred\n");
@@ -131,12 +131,12 @@ double** weighted_adj_mat(double** obs, int n, int d){
     double** wam;
     int i, j;
 
-    wam = calloc(n, sizeof(double*));
+    wam = (double**) calloc(n, sizeof(double*));
     if (wam == NULL) {
         return NULL;
     }
     for (i = 0; i < n; i++){
-        wam[i] = calloc(n, sizeof(double));
+        wam[i] = (double*) calloc(n, sizeof(double));
         if (wam[i] == NULL) { 
             free_matrix(wam, i);
             return NULL;
@@ -160,12 +160,12 @@ double** diag_deg_mat(double** wam, int n){
     double** ddg;
     int i, j;
 
-    ddg = calloc(n, sizeof(double*));
+    ddg = (double**) calloc(n, sizeof(double*));
     if (ddg == NULL) {
         return NULL;
     }
     for (i = 0; i < n; i++){
-        ddg[i] = calloc(n, sizeof(double));
+        ddg[i] = (double*) calloc(n, sizeof(double));
         if (ddg[i] == NULL) {
             free_matrix(ddg, i);
             return NULL;
@@ -190,12 +190,12 @@ double** norm_graph_lap(double** wam, double** ddg, int n){
         ddg[i][i] = 1 / sqrt(ddg[i][i]);
     }
     
-    lnorm = calloc(n, sizeof(double*));
+    lnorm = (double**) calloc(n, sizeof(double*));
     if (lnorm == NULL) {
         return NULL;
     }
     for (i = 0; i < n; i++){
-        lnorm[i] = calloc(n, sizeof(double));
+        lnorm[i] = (double*) calloc(n, sizeof(double));
         if (lnorm[i] == NULL) { 
             free_matrix(lnorm, i);
             return NULL;
@@ -222,7 +222,7 @@ int* max_abs_off_diag(double** mat, int n){
     int i, j;
     int *max_indices;
     
-    max_indices = calloc(2, sizeof(int));
+    max_indices = (int*) calloc(2, sizeof(int));
     if (max_indices == NULL) {
         return NULL;
     }
@@ -264,11 +264,11 @@ int update_e_vector_mat(double** V, double c, double s, int n, int i, int j){
     double* v1, *v2;
     int k;
     
-    v1 = calloc(n, sizeof(double));
+    v1 = (double*) calloc(n, sizeof(double));
     if (v1 == NULL) {
         return 1;
     }
-    v2 = calloc(n, sizeof(double));
+    v2 = (double*) calloc(n, sizeof(double));
     if (v2 == NULL) {
         return 1;
     }    
@@ -295,12 +295,12 @@ int update_e_value_mat(double** A, double c, double s, int n, int i, int j){
     int r;
     double d1, d2, offd;
 
-    temp = calloc(2, sizeof(double*));
+    temp = (double**) calloc(2, sizeof(double*));
     if (temp == NULL) {
         return 1;
     }
     for (r = 0; r < 2; r++){
-        temp[r] = calloc(n, sizeof(double));
+        temp[r] = (double*) calloc(n, sizeof(double));
         if (temp[r] == NULL){
             free_matrix(temp, r);
             return 1;
@@ -349,17 +349,17 @@ double** jacobi_eval_evec(double** mat, int n){
     flag = 0;
     eps = 0.00001;
     iter = 100;
-    A = calloc(n, sizeof(double*));
+    A = (double**) calloc(n, sizeof(double*));
     if (A == NULL) {
         return NULL;
     }
-    V = calloc(n+1, sizeof(double*));
+    V = (double**) calloc(n+1, sizeof(double*));
     if (V == NULL) {
         return NULL;
     }
     for (i = 0; i < n+1; i++){
         if (i < n){
-            A[i] = calloc(n, sizeof(double));
+            A[i] = (double*) calloc(n, sizeof(double));
             if (A[i] == NULL) {
                 free_matrix(A, i);
                 return NULL;
@@ -368,7 +368,7 @@ double** jacobi_eval_evec(double** mat, int n){
                 A[i][j] = mat[i][j];
             }
         }
-        V[i] = calloc(n, sizeof(double));
+        V[i] = (double*) calloc(n, sizeof(double));
         if (V[i] == NULL) {
             free_matrix(V, i);
             return NULL;
