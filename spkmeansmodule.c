@@ -203,9 +203,11 @@ that of the second array.
 */
 static int comparator(const void *x, const void *y)
 {
-    const double * dx = (const double *) x;
-    const double * dy = (const double *) y;
-    return dx[0] >= dy[0] ? -1 : dx[0] < dy[0];
+    double dx = (*(double**)x)[0];
+    double dy = (*(double**)y)[0];
+    int left = dx > dy;
+    int right = dx < dy;
+    return right - left;
 }
 
 /*
@@ -216,7 +218,7 @@ The function sorts (using qsort) the matrix by the first element of each row (by
 The sorting is done decreasingly (larger e-vals first).
 */
 static void sort_by_eval(double** jacobi_t, int n){
-    qsort(jacobi_t, n, sizeof(double*), comparator);
+    qsort(jacobi_t, n, sizeof(jacobi_t[0]), comparator);
 }
 
 /*
