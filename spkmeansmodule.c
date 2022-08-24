@@ -287,7 +287,7 @@ static PyObject* apply_kmeans_prep(PyObject *self, PyObject *args){
         jacobi = transpose(jacobi_t, n, n+1);
         if (jacobi == NULL){ result = NULL; }
         else{
-            normalize(jacobi + 1, n, n);
+            normalize(jacobi + 1, n, k);
             result = write_to_python(jacobi + 1, n, k);
         }
     }
