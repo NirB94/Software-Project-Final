@@ -47,15 +47,15 @@ static int calculate_kmeans(double** obs, double** centroids, int n, int d, int 
     int* cluster_counts;
     int i, j, curr_index, converged;
     
-    new_centroids = calloc(k, sizeof(double*));
+    new_centroids = (double**) calloc(k, sizeof(double*));
     if (new_centroids == NULL){ return 1; }
-    cluster_counts = calloc(k, sizeof(int));
+    cluster_counts = (int*) calloc(k, sizeof(int));
     if (cluster_counts == NULL){
         free(new_centroids);
         return 1;
     }
     for (i = 0; i < k; i++){
-        new_centroids[i] = calloc(d, sizeof(double));
+        new_centroids[i] = (double*) calloc(d, sizeof(double));
         if (new_centroids[i] == NULL){
             free_matrix(new_centroids, i);
             free(cluster_counts);
@@ -109,13 +109,13 @@ static double** read_from_python(int n, int d, PyObject *python_list){
     int i, j;
     double **matrix;
     PyObject *temp_list, *element;
-    matrix = calloc(n, sizeof(double*));
+    matrix = (double**) calloc(n, sizeof(double*));
     if (matrix == NULL){
         free(matrix);
         return NULL;
     }
     for (i = 0; i < n; i++){
-        matrix[i] = calloc(d, sizeof(double));
+        matrix[i] = (double*) calloc(d, sizeof(double));
         if (matrix[i] == NULL){
             free_matrix(matrix, i);
             return NULL;
@@ -181,10 +181,10 @@ static double** transpose(double** mat, int n, int d){
     double** result;
     int i, j;
 
-    result = calloc(d, sizeof(double*));
+    result = (double**) calloc(d, sizeof(double*));
     if (result == NULL){ return NULL; }
     for (i = 0; i < d; i++){
-        result[i] = calloc(n, sizeof(double));
+        result[i] = (double*) calloc(n, sizeof(double));
         if (result[i] == NULL){
             free_matrix(result, i);
             return NULL;
