@@ -10,7 +10,7 @@
 The function finds the index of the closest centroid to the array x.
 The distance is measured using the euclidean distance.
 The function assumes the dimension of the centroids and of x is d.
-The function uses the function euclid_dist_sq.
+The function uses the function euclid_dist.
 */
 static int find_closest(double** centroids, double* x, int k, int d){
     double minimal_distance, curr_distance;
@@ -252,7 +252,7 @@ static void normalize(double** mat, int n, int d){
     double s;
 
     for (i = 0; i < n; i++){
-        s = 0;
+        s = 0.0;
         for (j = 0; j < d; j++){
             s += mat[i][j] * mat[i][j];
         }
