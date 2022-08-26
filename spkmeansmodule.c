@@ -258,7 +258,8 @@ static void normalize(double** mat, int n, int d){
         }
         s = sqrt(s);
         for (j = 0; j < d; j++){
-            mat[i][j] /= s;
+            if (s != 0){ mat[i][j] /= s; }
+            else{ mat[i][j] = 0; }
         }
     }
 }

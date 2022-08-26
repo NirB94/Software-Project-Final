@@ -180,7 +180,8 @@ double** diag_deg_mat(double** wam, int n){
 /*
 The function receives a weighted adjacency matrix and its apropriate diagonal degree matrix.
 Both matrices are of size n*n.
-The function calculates the apropriate normalized graph laplacian.
+The function calculates the apropriate normalized graph laplacian, according to the following:
+LNORM = I - DDG^(-0.5) * WAM * DDG^(-0.5)
 */
 double** norm_graph_lap(double** wam, double** ddg, int n){
     double** lnorm;
@@ -257,7 +258,8 @@ double sum_off_diag_sq(double** mat, int n){
 
 /*
 The function receives the n*n sized e-vector matrix V, the indices i & j, and the values c & s.
-The function multiples V = V * P.
+The function multiples V[1:, :] = V[1:, :] * P.
+The first row of V is left unchanged.
 The matrix P is given as described in the instructions.
 */
 int update_e_vector_mat(double** V, double c, double s, int n, int i, int j){
@@ -338,7 +340,7 @@ int update_e_value_mat(double** A, double c, double s, int n, int i, int j){
 The function receives a symmetric double matrix of size n*n.
 The function uses the Jacobi iterative method to calculate the matrix' e-values and e-vectors.
 The function returns the matrix V whose first row is the e-values, 
-and the column below each value is the corresponding e-vector.
+and the column below each e-value is the corresponding e-vector.
 */
 double** jacobi_eval_evec(double** mat, int n){
     double** A, **V;
@@ -374,7 +376,7 @@ double** jacobi_eval_evec(double** mat, int n){
             return NULL;
         }
         if (i > 0){    
-            V[i][i-1] = 1;
+            V[i][i-1] = 1; /* V[1:, :] = I*/
         }
     }
 
@@ -389,13 +391,13 @@ double** jacobi_eval_evec(double** mat, int n){
             t = sign(theta) / (fabs(theta) + sqrt(theta * theta + 1));
             c = 1 / sqrt(t * t + 1);
             s = t * c;
-            if (update_e_value_mat(A, c, s, n, midx[0], midx[1]) == 1){
+            if (update_e_value_mat(A, c, s, n, midx[0], midx[1]) == 1){ /* A = P^T * A * P */
                 flag = 1;
                 break;
             }
             sso2 = sum_off_diag_sq(A, n);
             iter--;
-            if (update_e_vector_mat(V, c, s, n, midx[0], midx[1]) == 1){
+            if (update_e_vector_mat(V, c, s, n, midx[0], midx[1]) == 1){ /* V[1:, :] = V[1:, :] * P */
                 flag = 1;
                 break;
             }
@@ -404,7 +406,7 @@ double** jacobi_eval_evec(double** mat, int n){
     }
     if (flag == 0){
         for (i = 0; i < n; i++){
-            V[0][i] = A[i][i];
+            V[0][i] = A[i][i]; /* V[1, :] = DIAG(A) */
         }
     }
     free_matrix(A, n);
