@@ -13,8 +13,8 @@ def main():
     try:
         obs = pd.read_csv(file_path, header=None)
         obs = obs.to_numpy()
-        n,d = obs.shape[0], obs.shape[1]
-        assert(k < n)
+        n, d = obs.shape[0], obs.shape[1]
+        assert(-1 < k < n)
     except(AssertionError):
         print("Invalid Input!")
         return
@@ -29,7 +29,7 @@ def main():
         except(AssertionError):
             print("An Error Has Occurred")
             return
-    else: # Else, full sp kmeans is desired
+    else: # Else, full normalized spectral kmeans is desired
         lnorm = spk.apply_mat_ops("lnorm", n, d, obs.tolist()) # Calculate lnorm
         try:
             assert(lnorm != None)

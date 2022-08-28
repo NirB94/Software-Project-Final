@@ -203,10 +203,10 @@ that of the second array.
 */
 static int comparator(const void *x, const void *y)
 {
-    double dx = (*(double**)x)[0];
-    double dy = (*(double**)y)[0];
-    int left = dx > dy;
-    int right = dx < dy;
+    double* dx = (*(double**)x); /* Cast x to a pointer of a double array, and return the array */
+    double* dy = (*(double**)y); /* Cast y to a pointer of a double array, and return the array */
+    int left = dx[0] > dy[0];
+    int right = dx[0] < dy[0];
     return right - left;
 }
 
@@ -240,7 +240,7 @@ static int eigen_gap(double** jacobi_t, int n){
             imax = i;
         }
     }
-    return imax+1;
+    return imax+1; /* Amount of e-vals desired, not the index of the last */
 }
 
 /*
@@ -285,10 +285,10 @@ static PyObject* apply_kmeans_prep(PyObject *self, PyObject *args){
         sort_by_eval(jacobi_t, n);
         if (k == 0){ k = eigen_gap(jacobi_t, n); }
         free_matrix(jacobi, n+1);
-        jacobi = transpose(jacobi_t, n, n+1);
+        jacobi = transpose(jacobi_t, n, n+1); /* Jacobi is now the extended U matrix */
         if (jacobi == NULL){ result = NULL; }
         else{
-            normalize(jacobi + 1, n, k);
+            normalize(jacobi + 1, n, k); /* Normalize to receive T */
             result = write_to_python(jacobi + 1, n, k);
         }
     }

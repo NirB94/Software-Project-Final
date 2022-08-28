@@ -375,8 +375,8 @@ double** jacobi_eval_evec(double** mat, int n){
             free_matrix(V, i);
             return NULL;
         }
-        if (i > 0){    
-            V[i][i-1] = 1; /* V[1:, :] = I*/
+        if (i > 0){
+            V[i][i-1] = 1; /* V[1:, :] = I */
         }
     }
 
@@ -401,7 +401,7 @@ double** jacobi_eval_evec(double** mat, int n){
                 flag = 1;
                 break;
             }
-        } while (sso1 - sso2 > eps || iter > 0);
+        } while (((sso1 - sso2) > eps) || (iter > 0));
         free(midx);
     }
     if (flag == 0){
@@ -449,37 +449,23 @@ double** calculate_mat(double** mat, char* goal ,int n, int d){
     }
     
     wam = weighted_adj_mat(mat, n, d);
-    if (wam == NULL){
-        return NULL;
-    }
-    if (strcmp(goal, "wam") == 0) {
+    if ((wam == NULL) || (strcmp(goal, "wam") == 0)){
         return wam;
     }
     else {
         ddg = diag_deg_mat(wam, n);
         if ((ddg == NULL) || (strcmp(goal, "ddg") == 0)){
             free_matrix(wam, n);
-            if (ddg == NULL){
-                return NULL;
-            }
-            else {
-                return ddg;
-            }
+            return ddg;
         }
         else {
             lnorm = norm_graph_lap(wam, ddg, n);
             free_matrix(wam, n);
             free_matrix(ddg, n);
-            if (lnorm == NULL){
-                return NULL;
-            }
-            else {
-                return lnorm;
-            }
+            return lnorm;
         }
     }
 }
-
 
 int main(int argc, char *argv[]){
     char* goal;
