@@ -205,7 +205,7 @@ double** norm_graph_lap(double** wam, double** ddg, int n){
     }
     for (i = 0; i < n; i++){
         for (j = i + 1; j < n; j++){
-            lnorm[i][j] = - wam[i][j] * ddg[i][i] * ddg[j][j];
+            lnorm[i][j] = - (wam[i][j] * ddg[i][i] * ddg[j][j]);
             lnorm[j][i] = lnorm[i][j];
         }
     }
@@ -230,10 +230,12 @@ int* max_abs_off_diag(double** mat, int n){
     max_indices[0] = 0;
     max_indices[1] = 1;
     for (i = 0; i < n; i++){
-        for (j = i + 1; j < n; j++){
-            if (fabs(mat[max_indices[0]][max_indices[1]]) < fabs(mat[i][j])){
-                max_indices[0] = i;
-                max_indices[1] = j;
+        for (j = 0; j < n; j++){
+            if (i != j){
+                if (fabs(mat[max_indices[0]][max_indices[1]]) < fabs(mat[i][j])){
+                    max_indices[0] = i;
+                    max_indices[1] = j;
+                }
             }
         }
     }
@@ -249,8 +251,10 @@ double sum_off_diag_sq(double** mat, int n){
     double s = 0;
 
     for (i = 0; i < n; i++){
-        for (j = i+1; j < n; j++){
-            s += 2 * mat[i][j] * mat[i][j];
+        for (j = 0; j < n; j++){
+            if (i != j){
+                s += pow(mat[i][j], 2);
+            }
         }
     }
     return s;
@@ -275,8 +279,8 @@ int update_e_vector_mat(double** V, double c, double s, int n, int i, int j){
         return 1;
     }    
     for (k = 1; k < n+1; k++){
-            v1[k-1] = c * V[k][i] - s * V[k][j]; /* new ith column = c*(ith column) - s*(jth column) */
-            v2[k-1] = s * V[k][i] + c * V[k][j]; /* new jth column = s*(ith column) + c*(jth column) */
+            v1[k-1] = (c * V[k][i]) - (s * V[k][j]); /* new ith column = c*(ith column) - s*(jth column) */
+            v2[k-1] = (s * V[k][i]) + (c * V[k][j]); /* new jth column = s*(ith column) + c*(jth column) */
         }
     for (k = 1; k < n+1; k++){
         V[k][i] = v1[k-1];
@@ -309,14 +313,14 @@ int update_e_value_mat(double** A, double c, double s, int n, int i, int j){
         }
     }
     
-    d1 = c * c * A[i][i] + s * s * A[j][j] - 2 * c * s * A[i][j];
-    d2 = s * s * A[i][i] + c * c * A[j][j] + 2 * c * s * A[i][j];
-    offd = 0;
+    d1 = (pow(c, 2) * A[i][i]) + (pow(s, 2) * A[j][j]) - (2 * c * s * A[i][j]);
+    d2 = (pow(s, 2) * A[i][i]) + (pow(c, 2) * A[j][j]) + (2 * c * s * A[i][j]);
+    offd = 0.0;
 
     for (r = 0; r < n; r++){
         if (r != i && r != j){
-            temp[0][r] = c * A[r][i] - s * A[r][j];
-            temp[1][r] = c * A[r][j] + s * A[r][i];
+            temp[0][r] = (c * A[r][i]) - (s * A[r][j]);
+            temp[1][r] = (c * A[r][j]) + (s * A[r][i]);
         }
     }
 
@@ -376,7 +380,7 @@ double** jacobi_eval_evec(double** mat, int n){
             return NULL;
         }
         if (i > 0){
-            V[i][i-1] = 1; /* V[1:, :] = I */
+            V[i][i-1] = 1.0; /* V[1:, :] = I */
         }
     }
 
@@ -386,23 +390,25 @@ double** jacobi_eval_evec(double** mat, int n){
         {
             sso1 = sso2;
             midx = max_abs_off_diag(A, n);
-            if (A[midx[0]][midx[1]] == 0) { break; } /* If reached a diagonal matrix, done */
-            theta = (A[midx[1]][midx[1]] - A[midx[0]][midx[0]]) / (2 * A[midx[0]][midx[1]]);
-            t = sign(theta) / (fabs(theta) + sqrt(theta * theta + 1));
-            c = 1 / sqrt(t * t + 1);
+            i = midx[0];
+            j = midx[1];
+            free(midx);
+            if (A[i][j] == 0) { break; } /* If reached a diagonal matrix, done */
+            theta = (A[j][j] - A[i][i]) / (2.0 * A[i][j]);
+            t = sign(theta) / (fabs(theta) + sqrt(pow(theta, 2) + 1.0));
+            c = 1.0 / sqrt(pow(t, 2) + 1);
             s = t * c;
-            if (update_e_value_mat(A, c, s, n, midx[0], midx[1]) == 1){ /* A = P^T * A * P */
+            if (update_e_value_mat(A, c, s, n, i, j) == 1){ /* A = P^T * A * P */
                 flag = 1;
                 break;
             }
             sso2 = sum_off_diag_sq(A, n);
             iter--;
-            if (update_e_vector_mat(V, c, s, n, midx[0], midx[1]) == 1){ /* V[1:, :] = V[1:, :] * P */
+            if (update_e_vector_mat(V, c, s, n, i, j) == 1){ /* V[1:, :] = V[1:, :] * P */
                 flag = 1;
                 break;
             }
         } while (((sso1 - sso2) > eps) || (iter > 0));
-        free(midx);
     }
     if (flag == 0){
         for (i = 0; i < n; i++){
@@ -497,7 +503,7 @@ int main(int argc, char *argv[]){
         return 1;
     }
     jacobi_flag = strcmp(goal, "jacobi") == 0;  /* A boolean flag for jacobi specific use */
-    print_mat(result, dims[0] + jacobi_flag, dims[1]);
+    print_mat(result, dims[0] + jacobi_flag, dims[0]);
     free_matrix(result, dims[0] + jacobi_flag);
     return 0;
 }
