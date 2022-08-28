@@ -216,7 +216,7 @@ double** norm_graph_lap(double** wam, double** ddg, int n){
 }
 
 /*
-The function receives a symmetric double matrix of size n*n.
+The function receives a double matrix of size n*n.
 The function finds the pair of indices of the maximal off-diagonal element (in absolute terms).
 */
 int* max_abs_off_diag(double** mat, int n){
@@ -243,7 +243,7 @@ int* max_abs_off_diag(double** mat, int n){
 }
 
 /*
-The function receives a symmetric double matrix of size n*n.
+The function receives a double matrix of size n*n.
 The function calculates the sum of its squared off-diagonal elements.
 */
 double sum_off_diag_sq(double** mat, int n){
@@ -261,7 +261,7 @@ double sum_off_diag_sq(double** mat, int n){
 }
 
 /*
-The function receives the n*n sized e-vector matrix V, the indices i & j, and the values c & s.
+The function receives the (n+1)*n sized e-vector matrix V, the indices i & j, and the values c & s.
 The function multiples V[1:, :] = V[1:, :] * P.
 The first row of V is left unchanged.
 The matrix P is given as described in the instructions.
@@ -279,8 +279,8 @@ int update_e_vector_mat(double** V, double c, double s, int n, int i, int j){
         return 1;
     }    
     for (k = 1; k < n+1; k++){
-            v1[k-1] = (c * V[k][i]) - (s * V[k][j]); /* new ith column = c*(ith column) - s*(jth column) */
-            v2[k-1] = (s * V[k][i]) + (c * V[k][j]); /* new jth column = s*(ith column) + c*(jth column) */
+            v1[k-1] = (c * V[k][i]) - (s * V[k][j]); /* V[1:, i] = c*V[1:, i] - s*V[1:, j] */
+            v2[k-1] = (s * V[k][i]) + (c * V[k][j]); /* V[1:, j] = s*V[1:, i] + c*V[1:, j] */
         }
     for (k = 1; k < n+1; k++){
         V[k][i] = v1[k-1];
@@ -408,7 +408,7 @@ double** jacobi_eval_evec(double** mat, int n){
                 flag = 1;
                 break;
             }
-        } while (((sso1 - sso2) > eps) || (iter > 0));
+        } while (((sso1 - sso2) > eps) && (iter > 0));
     }
     if (flag == 0){
         for (i = 0; i < n; i++){
@@ -418,7 +418,7 @@ double** jacobi_eval_evec(double** mat, int n){
     free_matrix(A, n);
 
     if (flag == 1){
-        free_matrix(V, n);
+        free_matrix(V, n+1);
         return NULL;
     }
     return V;
