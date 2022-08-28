@@ -353,7 +353,7 @@ double** jacobi_eval_evec(double** mat, int n){
     double sso1, sso2, eps, s, c, theta, t;
     
     flag = 0;
-    eps = 0.00001;
+    eps = 1.0 * pow(10, -5);
     iter = 100;
     A = (double**) calloc(n, sizeof(double*));
     if (A == NULL) {
