@@ -167,7 +167,7 @@ static PyObject* apply_mat_ops(PyObject *self, PyObject *args){
     free_matrix(mat, n);
     
     if (result == NULL){ return NULL; }
-    jacobi_flag = (strcmp(goal, "jacobi") == 0);
+    jacobi_flag = (strcmp(goal, "jacobi") == 0); /* A boolean flag for jacobi specific use */
     python_result = write_to_python(result, n + jacobi_flag, n);
     free_matrix(result, n + jacobi_flag);
     return python_result;

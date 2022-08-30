@@ -4,6 +4,54 @@ import pandas as pd
 import spkmeansmodule as spk
 MAT_OPS = ("wam", "ddg", "lnorm", "jacobi") # designated words for matrix operations.
 
+'''
+The function receives the input from the user, validates its length and validates the goal requested.
+'''
+def receive_input():
+    assert len(sys.argv) == 4
+    try:
+        k = int(sys.argv[1])
+    except:
+        assert 1 == 0
+    assert((sys.argv[2] in MAT_OPS) or (sys.argv[2] == "spk")) # Validate the goal
+    return k, sys.argv[2], sys.argv[3]
+
+'''
+The function finds the distance of the closest centroid to x.
+The distance is measured using the euclidean distance.
+The function assumes the dimension of the centroids and of x is the same.
+'''
+def find_closest_distance(x, centroids):
+    minimal_distance = sum((x-centroids[0]) ** 2)
+    for i in range(1, len(centroids)):
+        minimal_distance = min(minimal_distance, sum((x-centroids[i]) ** 2))
+    return minimal_distance
+
+'''
+The function implements the kmeans++ algorithm.
+The function uses weights to randomly choose the first K centroids from the observations.
+The weights are assigned with regards to the euclidean distance from current centroids.
+'''
+def kmeanspp(k, obs):
+    np.random.seed(0)
+    indices = [np.random.choice(range(len(obs)))]
+    centroids = np.array([obs[indices[0]]])
+    for i in range(1, k):
+        distances = np.array([find_closest_distance(obs[j], centroids) for j in range(len(obs))])
+        s = sum(distances)
+        probs = distances / s
+        rand_index = np.random.choice(range(len(obs)), p=probs)
+        indices.append(rand_index)
+        centroids = np.append(centroids, np.array([obs[rand_index]]), axis = 0)
+    return centroids, indices
+
+'''
+The function receives a matrix, and prints it row by row using a comma as a delimiter between elements.
+'''
+def print_mat(mat):
+    for i in range(len(mat)):
+        print(','.join(["%.4f" % elem for elem in mat[i]]))
+        
 def main():
     try:
         k, goal, file_path = receive_input() # Receive and validate input
@@ -60,48 +108,6 @@ def main():
         except(AssertionError):
             print("An Error Has Occurred")
             return
-    
-def receive_input():
-    assert len(sys.argv) == 4
-    try:
-        k = int(sys.argv[1])
-    except:
-        assert 1 == 0
-    assert((sys.argv[2] in MAT_OPS) or (sys.argv[2] == "spk")) # Validate the goal
-    return k, sys.argv[2], sys.argv[3]
-
-'''
-The function finds the distance of the closest centroid to x.
-The distance is measured using the euclidean distance.
-The function assumes the dimension of the centroids and of x is the same.
-'''
-def find_closest_distance(x, centroids):
-    minimal_distance = sum((x-centroids[0]) ** 2)
-    for i in range(1, len(centroids)):
-        minimal_distance = min(minimal_distance, sum((x-centroids[i]) ** 2))
-    return minimal_distance
-
-'''
-The function implements the kmeans++ algorithm.
-The function uses weights to randomly choose the first K centroids from the observations.
-The weights are assigned with regards to the euclidean distance from current centroids.
-'''
-def kmeanspp(k, obs):
-    np.random.seed(0)
-    indices = [np.random.choice(range(len(obs)))]
-    centroids = np.array([obs[indices[0]]])
-    for i in range(1, k):
-        distances = np.array([find_closest_distance(obs[j], centroids) for j in range(len(obs))])
-        s = sum(distances)
-        probs = distances / s
-        rand_index = np.random.choice(range(len(obs)), p=probs)
-        indices.append(rand_index)
-        centroids = np.append(centroids, np.array([obs[rand_index]]), axis = 0)
-    return centroids, indices
-
-def print_mat(mat):
-    for i in range(len(mat)):
-        print(','.join(["%.4f" % elem for elem in mat[i]]))
 
 if __name__ == "__main__":
     main()

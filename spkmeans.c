@@ -6,7 +6,11 @@
 #include <string.h>
 #include "spkmeans.h"
 
-
+/*
+The function receives a double matrix with n rows.
+The function frees all rows and then frees the matrix itself.
+The function treats the exception of when the matrix is NULL as-well (by not doing anything).
+*/
 void free_matrix(double** mat, int n) {
     int i;
     
@@ -276,6 +280,7 @@ int update_e_vector_mat(double** V, double c, double s, int n, int i, int j){
     }
     v2 = (double*) calloc(n, sizeof(double));
     if (v2 == NULL) {
+        free(v1);
         return 1;
     }    
     for (k = 1; k < n+1; k++){
@@ -297,21 +302,19 @@ The function multiplies A = P^T * A * P.
 The matrix P is given as described in the instructions.
 */
 int update_e_value_mat(double** A, double c, double s, int n, int i, int j){
-    double** temp;
+    double* t1, *t2;
     int r;
     double d1, d2, offd;
 
-    temp = (double**) calloc(2, sizeof(double*));
-    if (temp == NULL) {
+    t1 = (double*) calloc(n, sizeof(double));
+    if (t1 == NULL) {
         return 1;
     }
-    for (r = 0; r < 2; r++){
-        temp[r] = (double*) calloc(n, sizeof(double));
-        if (temp[r] == NULL){
-            free_matrix(temp, r);
-            return 1;
-        }
-    }
+    t2 = (double*) calloc(n, sizeof(double));
+    if (t2 == NULL) {
+        free(t1);
+        return 1;
+    } 
     
     d1 = (pow(c, 2) * A[i][i]) + (pow(s, 2) * A[j][j]) - (2 * c * s * A[i][j]);
     d2 = (pow(s, 2) * A[i][i]) + (pow(c, 2) * A[j][j]) + (2 * c * s * A[i][j]);
@@ -319,24 +322,25 @@ int update_e_value_mat(double** A, double c, double s, int n, int i, int j){
 
     for (r = 0; r < n; r++){
         if (r != i && r != j){
-            temp[0][r] = (c * A[r][i]) - (s * A[r][j]);
-            temp[1][r] = (c * A[r][j]) + (s * A[r][i]);
+            t1[r] = (c * A[r][i]) - (s * A[r][j]);
+            t2[r] = (c * A[r][j]) + (s * A[r][i]);
         }
     }
 
     for (r = 0; r < n; r++){
         if (r != i && r != j){
-            A[r][i] = temp[0][r];
-            A[i][r] = temp[0][r];
-            A[r][j] = temp[1][r];
-            A[j][r] = temp[1][r];
+            A[r][i] = t1[r];
+            A[i][r] = t1[r];
+            A[r][j] = t2[r];
+            A[j][r] = t2[r];
         }
     }
     A[i][i] = d1;
     A[j][j] = d2;
     A[i][j] = offd;
     A[j][i] = offd;
-    free_matrix(temp, 2);
+    free(t1);
+    free(t2);
     return 0;
 }
 
