@@ -2,6 +2,7 @@ import sys
 import numpy as np
 import pandas as pd
 import spkmeansmodule as spk
+np.random.seed(0)
 MAT_OPS = ("wam", "ddg", "lnorm", "jacobi") # designated words for matrix operations.
 
 '''
@@ -33,7 +34,6 @@ The function uses weights to randomly choose the first K centroids from the obse
 The weights are assigned with regards to the euclidean distance from current centroids.
 '''
 def kmeanspp(k, obs):
-    np.random.seed(0)
     indices = [np.random.choice(range(len(obs)))]
     centroids = np.array([obs[indices[0]]])
     for i in range(1, k):
