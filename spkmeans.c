@@ -234,7 +234,7 @@ int* max_abs_off_diag(double** mat, int n){
     max_indices[0] = 0;
     max_indices[1] = 1;
     for (i = 0; i < n; i++){
-        for (j = 0; j < n; j++){
+        for (j = i+1; j < n; j++){
             if (i != j){
                 if (fabs(mat[max_indices[0]][max_indices[1]]) < fabs(mat[i][j])){
                     max_indices[0] = i;

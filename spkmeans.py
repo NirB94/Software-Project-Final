@@ -84,7 +84,7 @@ def main():
         except(AssertionError):
             print("An Error Has Occurred")
             return
-        jacobi = spk.apply_mat_ops("jacobi", n, d, lnorm) # Calculate e-values and e-vectors
+        jacobi = spk.apply_mat_ops("jacobi", n, n, lnorm) # Calculate e-values and e-vectors
         try:
             assert(jacobi != None)
         except(AssertionError):

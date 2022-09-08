@@ -254,7 +254,7 @@ static void normalize(double** mat, int n, int d){
     for (i = 0; i < n; i++){
         s = 0.0;
         for (j = 0; j < d; j++){
-            s += mat[i][j] * mat[i][j];
+            s += pow(mat[i][j], 2);
         }
         s = sqrt(s);
         for (j = 0; j < d; j++){
@@ -278,7 +278,6 @@ static PyObject* apply_kmeans_prep(PyObject *self, PyObject *args){
     if (!PyArg_ParseTuple(args, "iiO", &n, &k, &python_jacobi)){ return NULL; }
     jacobi = read_from_python(n+1, n, python_jacobi);
     if (jacobi == NULL) { return NULL; }
-
     jacobi_t = transpose(jacobi, n+1, n);
     if (jacobi_t == NULL) { result = NULL; }
     else{
